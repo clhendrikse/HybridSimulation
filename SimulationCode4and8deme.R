@@ -5,37 +5,76 @@ library(adegenet)
 library(pophelper)
 library(xlsx)
 library(sjmisc)
+setwd("/Users/CHendrikse/Documents/fsc26_win64/4Demeshistchange/")
+setwd("/Users/CHendrikse/Documents/fsc26_win64/4Demesmigrationchange/")
+arpfilename<- "8Demestrial_1_1" #without .arp
+makeStructure(arpfilename)
 
-#_____________________________4 Demes____________________________________________________________________________________
-setwd("/Users/CHendrikse/Documents/fsc26_win64/4Demes/")
-#4demes file n=1 --------------------------------------------------------------------------------------------------------
+#after genind2Structure
+demeQmat <- readQ("newmigrationchange/50_50/Results/50_50_run_1_f")  
+str(demeQmat) 
+clusterdf <- "demeQmat$`50_50_run_1_f`"
+tabledecisions <- structuredecision(demeQmat$`50_50_run_1_f`)
+tabledecisions$Decision[1:10]
+tablewithboth <- AddingTrueGroup(tabledecisions,labelvector)
+completetable <- CompareQ(tablewithboth)
+completetable
+SuccessProp <- ProportionOfSuccess(completetable)
+SuccessProp
 
-#converting .arp file to a .gen file
-arp2gen("4Demes_1_1.arp")
+
+# Function converting .arp file to a .gen file
+makeStructure <- function(filename){
+  addarp <- paste(filename, ".arp", sep="")
+arp2gen(addarp)
 
 #turning file into a genind object
-deme4ind1 <- read.genepop("4Demes_1_1.gen", ncode = 3)
+addgen<- paste(filename, ".gen", sep="")
+deme4ind1 <- read.genepop(addgen, ncode = 3)
 deme4ind1@tab
+deme4ind1@pop
 
 individuals4demes1 <- seppop(deme4ind1,res.type="genind")
-names(individuals4demes1)
-
-species1_1 <- individuals4demes1[["pop1"]]
-species2_1 <- individuals4demes1[["pop2"]]
-species3_1 <- individuals4demes1[["pop3"]]
-species4_1 <- individuals4demes1[["pop4"]]
-
+names(individuals4demes1[2])
+length(names(individuals4demes1))
+if(length(names(individuals4demes1)) == 4){
+  species1_1 <- individuals4demes1[["pop1"]]
+  species2_1 <- individuals4demes1[["pop2"]]
+  species3_1 <- individuals4demes1[["pop3"]]
+  species4_1 <- individuals4demes1[["pop4"]]
+  
+}
+if(length(names(individuals4demes1)) == 8){
+  species1_1 <- individuals4demes1[["pop1"]]
+  species2_1 <- individuals4demes1[["pop2"]]
+  species3_1 <- individuals4demes1[["pop3"]]
+  species4_1 <- individuals4demes1[["pop4"]]
+  species5_1 <- individuals4demes1[["pop5"]]
+  species6_1 <- individuals4demes1[["pop6"]]
+  species7_1 <- individuals4demes1[["pop7"]]
+  species8_1 <- individuals4demes1[["pop8"]]
+  
+}
 
 #hybridizing pop1 and pop2
 hybridsplusparents4demes1 <- hybridize(species1_1, species2_1, pop = "hybrid", n=10)
 hybridsplusparents4demes1@pop
 #storing all species info into one genind object 4_1 referring to 4 demes n=1
   #note: hybridize does not appear to store parents
+if(length(names(individuals4demes1)) == 4){
+  
 final_genind4_1 <- repool(species1_1, species2_1, hybridsplusparents4demes1, species3_1, species4_1)
 final_genind4_1@pop
+}
+if(length(names(individuals4demes1)) == 8){
+  final_genind4_1 <- repool(species1_1, species2_1, hybridsplusparents4demes1, species3_1, species4_1,species5_1, species6_1, species7_1, species8_1)
+  final_genind4_1@pop
+}
+
 #making function to store to vector
 final_genind_df4_1 <- genind2df(final_genind4_1)
 actual_values4_1 <- as.vector(final_genind_df4_1$pop)
+
 actual_values4_1
 
 #writing values into text file
@@ -43,139 +82,10 @@ actual_values4_1
 is.vector(actual_values4_1)
 
 genind2structure(final_genind4_1, file="parentandhybrid", pops=FALSE)
-
-#4demes n=2------------------------------------------------------------------------------------------------------------------
-
-setwd("/Users/CHendrikse/Documents/fsc26_win64/4Demes/")
-#converting .arp file to a .gen file
-arp2gen("4Demes_1_2.arp")
-
-#turning file into a genind object
-deme4ind2 <- read.genepop("4Demes_1_2.gen", ncode = 3)
-deme4ind2@tab
-
-#checking values
-nLoc(deme4ind2)
-# ncol(deme4ind1@tab)
-
-individuals4demes2 <- seppop(deme4ind2,res.type="genind")
-names(individuals4demes2)
-
-species1_2 <- individuals4demes2[["pop1"]]
-species2_2 <- individuals4demes2[["pop2"]]
-species3_2 <- individuals4demes2[["pop3"]]
-species4_2 <- individuals4demes2[["pop4"]]
+}
 
 
-#hybridizing pop1 and pop2
-hybridsplusparents4demes2 <- hybridize(species1_2, species2_2, pop = "hybrid", n=10)
-hybridsplusparents4demes2@pop
-#storing all species info into one genind object
-#note: hybridize does not appear to store parents
-final_genind4_2 <- repool(species1_2, species2_2, hybridsplusparents4demes2, species3_2, species4_2)
-final_genind4_2@pop
-#making function to store to vector
-final_genind_df4_2 <- genind2df(final_genind4_2)
-actual_values4_2 <- as.vector(final_genind_df4_2$pop)
-actual_values4_2
-
-#writing values into text file
-
-is.vector(actual_values4_2)
-
-genind2structure(final_genind4_2, file="parentandhybrid4_2", pops=FALSE)
-
-#____________________________________________8 Demes___________________________________________________________________
-#_____________________________8 Demes_____________________________________________________________________________________
-setwd("/Users/CHendrikse/Documents/fsc26_win64/8Demes/")
-#8Demes n=1------------------------------------------------------------------------------------------------------------
-
-#converting .arp file to a .gen file
-arp2gen("8Demes_1_1.arp")
-
-#turning file into a genind object
-deme8ind1 <- read.genepop("8Demes_1_1.gen", ncode = 3)
-deme8ind1@tab
-
-#checking values
-nLoc(deme8ind1)
-# ncol(deme4ind1@tab)
-
-individuals8demes1 <- seppop(deme8ind1,res.type="genind")
-names(individuals8demes1)
-
-species8deme1_1 <- individuals8demes1[["pop1"]]
-species8deme2_1 <- individuals8demes1[["pop2"]]
-species8deme3_1 <- individuals8demes1[["pop3"]]
-species8deme4_1 <- individuals8demes1[["pop4"]]
-species8deme5_1 <- individuals8demes1[["pop5"]]
-species8deme6_1 <- individuals8demes1[["pop6"]]
-species8deme7_1 <- individuals8demes1[["pop7"]]
-species8deme8_1 <- individuals8demes1[["pop8"]]
-
-#hybridizing pop1 and pop2
-hybridsplusparents8demes1 <- hybridize(species8deme1_1, species8deme2_1, pop = "hybrid", n=10)
-hybridsplusparents8demes1@pop
-#storing all species info into one genind object
-#note: hybridize does not appear to store parents
-final_genind8_1 <- repool(species8deme1_1, species8deme2_1, hybridsplusparents8demes1, 
-                          species8deme3_1, species8deme4_1, species8deme5_1, species8deme6_1,
-                          species8deme7_1, species8deme8_1)
-final_genind8_1@pop
-#making function to store to vector
-final_genind_df8_1 <- genind2df(final_genind8_1)
-actual_values8_1 <- as.vector(final_genind_df8_1$pop)
-actual_values8_1
-is.vector(actual_values8_1)
-
-#convert to structure file
-genind2structure(final_genind8_1, file="parentandhybrid8_1", pops=FALSE)
-#8Demes n=2------------------------------------------------------------------------------------------------------------
-setwd("/Users/CHendrikse/Documents/fsc26_win64/8Demes/")
-#converting .arp file to a .gen file
-arp2gen("8Demes_1_2.arp")
-
-#turning file into a genind object
-deme8ind2 <- read.genepop("8Demes_1_2.gen", ncode = 3)
-deme8ind2@tab
-
-#checking values
-nLoc(deme8ind2)
-# ncol(deme4ind1@tab)
-
-individuals8demes2 <- seppop(deme8ind2,res.type="genind")
-names(individuals8demes2)
-
-species8deme1_2 <- individuals8demes2[["pop1"]]
-species8deme2_2 <- individuals8demes2[["pop2"]]
-species8deme3_2 <- individuals8demes2[["pop3"]]
-species8deme4_2 <- individuals8demes2[["pop4"]]
-species8deme5_2 <- individuals8demes2[["pop5"]]
-species8deme6_2 <- individuals8demes2[["pop6"]]
-species8deme7_2 <- individuals8demes2[["pop7"]]
-species8deme8_2 <- individuals8demes2[["pop8"]]
-
-#hybridizing pop1 and pop2
-hybridsplusparents8demes2 <- hybridize(species8deme1_2, species8deme2_2, pop = "hybrid", n=10)
-hybridsplusparents8demes2@pop
-#storing all species info into one genind object
-#note: hybridize does not appear to store parents
-final_genind8_2 <- repool(species8deme1_2, species8deme2_2, hybridsplusparents8demes2, 
-                          species8deme3_2, species8deme4_2, species8deme5_2, species8deme6_2,
-                          species8deme7_2, species8deme8_2)
-final_genind8_2@pop
-#making function to store to vector
-final_genind_df8_2 <- genind2df(final_genind8_2)
-actual_values8_2 <- as.vector(final_genind_df8_2$pop)
-actual_values8_2
-is.vector(actual_values8_2)
-
-#convert to structure file
-genind2structure(final_genind8_2, file="parentandhybrid8_2", pops=FALSE)
-#----
-
-
-#___________genind to structure file code (citation in my drive)__________________________________________________
+#genind to structure file code (citation in my drive)
 genind2structure <- function(obj, file="", pops=FALSE){
   if(!"genind" %in% class(obj)){
     warning("Function was designed for genind objects.")
@@ -216,11 +126,7 @@ genind2structure <- function(obj, file="", pops=FALSE){
   
   # export table
   write.table(tab, file=file, sep="\t", quote=FALSE, row.names=FALSE)
-}
-
-  
-demeQmat <- readQ("4deme/parentandhybridset/Results4deme1/results4deme1")  
-str(demeQmat)  
+} #put pops = true need to call it differently
 
 
 #function that takes the Q values and creates a new column that labels STRUCTURE's decision changing the value in this function should allow the other functions to still run
@@ -238,9 +144,7 @@ structuredecision <- function(obj){
       hybrids3 <- rownames(obj[which(obj$Cluster3 > 0.4 & obj$Cluster3 < .6),])
       hybrids4 <- rownames(obj[which(obj$Cluster4 > 0.4 & obj$Cluster4 < .6),])
       hybridinds <- c(hybrids1, hybrids2, hybrids3, hybrids4)
-      if(ncol(obj) == 8){
-        hybridinds <- c(hybrids5, hybrids6, hybrids7, hybrids8)  
-      }
+  
       hybridinds <- unique(hybridinds)
       guesses <- c(pure1,pure2,pure3,pure4,hybridinds)
 #for 8 demes
@@ -363,21 +267,33 @@ structuredecision <- function(obj){
       return(tablewithdecision)
 
 }
-tabledecisions <- structuredecision(demeQmat$results4deme1)
-tabledecisions
 
 #function adding all true values
-AddingTrueGroup <- function(tablewithdecisions, lablevector){
- tablewithdecisions$ActualVals <- lablevector
-  return(tablewithdecisions)
+AddingTrueGroup <- function(tablewithdecisions, labelvect){
+ a <- 1
+ b<-a*10
+ c <- b-9
+ vect <-numeric(0)
+ while(b <= length(tabledecisions$Cluster1)){
+  
+   addtovect <- sort(tabledecisions$Decision[c:b], decreasing=TRUE)[1]
+   vect[c:b] <- addtovect
+   a<-a+1
+  b<-a*10
+   c<-c+10
+   
+   
+ }
+ tabledecisions$ActualVals <- vect
+ newtable <- tabledecisions
 }
-tablewithboth <- AddingTrueGroup(tabledecisions,actual_values4_1)
+
 
 #comparing groups and giving either TRUE or FALSE values depending on if STRUCTURE was correct in the individuals placement
 CompareQ <- function(tabletocompare){
      bookmark <- 1
      #creating initial comparison object
-     if(tabletocompare$Decision[1] == tabletocompare$ActualVals[1]){
+     if(tabletocompare$Decision[1] %in% tabletocompare$ActualVals[1]){
        bookmark <- bookmark +1
        comparison <- c(TRUE)
      }else{
@@ -387,7 +303,7 @@ CompareQ <- function(tabletocompare){
      
       #looping the table to make each comparison value
      while(bookmark <= length(tabletocompare$Cluster1)){
-           if(tabletocompare$Decision[1] == tabletocompare$ActualVals[1]){
+           if(tabletocompare$Decision[bookmark] %in% tabletocompare$ActualVals[bookmark]){
              bookmark <- bookmark +1
              comparison <- c(comparison, TRUE)
            }else{
@@ -400,9 +316,8 @@ CompareQ <- function(tabletocompare){
      newtable <- tabletocompare
      return(newtable)
 }
-completetable <- CompareQ(tablewithboth)
 
-#Function calculating proportion of successes_________________________________________________________
+#Function calculating proportion of successes
 ProportionOfSuccess <- function(finaltable){
   
   numsuccess <- sum(finaltable$Comparison)
@@ -411,6 +326,4 @@ ProportionOfSuccess <- function(finaltable){
   return(percentsuccess)
   
 }
-SuccessProp <- ProportionOfSuccess(completetable)
-SuccessProp
-#outputs proportion of successes
+
