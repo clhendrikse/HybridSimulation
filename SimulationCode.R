@@ -291,12 +291,12 @@ CompareQ <- function(tabletocompare, originalLabels){
 ProportionOfSuccess <- function(finaltable){
   
   
-  hybridinds <- str_find(completetable$ActualVals, "hybrid")
-  pureinds <- str_find(completetable$ActualVals, "pop")
+  hybridinds <- str_find(finaltable$ActualVals, "hybrid")
+  pureinds <- str_find(finaltable$ActualVals, "pop")
   
   numsuccess <- sum(finaltable$Comparison)
-  numhybridsuccess <- sum(completetable$Comparison[hybridinds])
-  numpuresuccess <-sum(completetable$Comparison[pureinds])
+  numhybridsuccess <- sum(finaltable$Comparison[hybridinds])
+  numpuresuccess <-sum(finaltable$Comparison[pureinds])
   
   percentsuccess <- numsuccess/length(finaltable$Comparison)
   percenthybridsuccess <- numhybridsuccess/length(hybridinds)
@@ -336,7 +336,7 @@ arpfilename<- "4DemeFixed_1_1" #without .arp
 
 labels <-makeStructure(arpfilename)
 
-demeQmat <- readQ("/Users/clhen/Documents/Internship/results4deme1.txt")  
+demeQmat <- readQ("/Users/clhen/Documents/HybridSimulation/Structure/Outputs/parentandhybrid4Deme_4_1_f")  
 demeQmat <- readQ("/Users/clhen/Documents/Internship/results4deme1.txt") 
-results <- demeQmat$results4deme1
+results <- demeQmat$parentandhybrid4Deme_4_1_f
 hold <- maketable(demeQmat, results, labels)
