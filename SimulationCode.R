@@ -4,6 +4,9 @@ library(diveRsity)
 library(adegenet)
 library(pophelper)
 library(sjmisc)
+library(dplyr)
+
+
 
 #functions ---------------------------------------------------------------------
 # Function converting .arp file to a .gen file 
@@ -42,25 +45,6 @@ makeStructure <- function(filename){
   
   #writing values into structure file
   genind2structure(final_genind, file="parentandhybrid", pops=FALSE)
-}
-
-maketable <- function(){
-#after genind2Structure
-demeQmat <- readQ("/Users/clhen/Documents/Internship/results4deme1.txt")  
-str(demeQmat) 
-clusterdf <- demeQmat
-tabledecisions <- as.numeric(0)
-tablewithboth <- as.numeric(0)
-completetable <- as.numeric(0)
-SuccessProp <- as.numeric(0)
-tabledecisions <- structuredecision(demeQmat$results4deme1)
-rownames(tabledecisions) <-
-tabledecisions$Decision[1:10]
-tablewithboth <- AddingTrueGroup(tabledecisions)
-completetable <- CompareQ(tablewithboth, labels)
-completetable
-SuccessProp <- ProportionOfSuccess(completetable)
-SuccessProp
 }
 
 #genind to structure file code (citation in my drive)
@@ -247,28 +231,34 @@ structuredecision <- function(obj){
 }
 
 #function adding all true values
-AddingTrueGroup <- function(tablewithdecisions, originalLabels){
+AddingTrueGroup <- function(tabledecisions){
   a <- 1
   b<-a*10
   c <- b-9
-  vect <-numeric(0)
-  while(b <= length(tabledecisions$Cluster1)){
-    
-    addtovect <- sort(tabledecisions$Decision[c:b], decreasing=FALSE)[1]
-    vect[c:b] <- addtovect
-    a<-a+1
-    b<-a*10
-    c<-c+10
-    
-    
+  #setting base value for the vector
+  vect <- "unknown"
+ 
+  while(a <= length(tabledecisions$Cluster1)){
+     decisionvect <- tabledecisions$Decision[c:b]
+     
+
+    if(length(str_find(decisionvect,tabledecisions$Decision[a])) >= 5){
+     vect[c:b] <- tabledecisions$Decision[a] 
+    }
+     
+     
+    if(a%%10 == 0){
+      b <- b+10
+      c<- c+10
+    }
+    a <- a+1
   }
   tabledecisions$ActualVals <- vect
-  newtable <- tabledecisions
+  return(tabledecisions)
 }
 
-
 #comparing groups and giving either TRUE or FALSE values depending on if STRUCTURE was correct in the individuals placement
-CompareQ <- function(tabletocompare){
+CompareQ <- function(tabletocompare, originalLabels){
   bookmark <- 1
   #creating initial comparison object
   if(tabletocompare$Decision[1] %in% tabletocompare$ActualVals[1]){
@@ -294,29 +284,59 @@ CompareQ <- function(tabletocompare){
   newtable <- tabletocompare
   newtable$Orignial <- originalLabels
   return(newtable)
+  print(newtable)
 }
 
 #Function calculating proportion of successes
 ProportionOfSuccess <- function(finaltable){
   
+  
+  hybridinds <- str_find(completetable$ActualVals, "hybrid")
+  pureinds <- str_find(completetable$ActualVals, "pop")
+  
   numsuccess <- sum(finaltable$Comparison)
+  numhybridsuccess <- sum(completetable$Comparison[hybridinds])
+  numpuresuccess <-sum(completetable$Comparison[pureinds])
+  
   percentsuccess <- numsuccess/length(finaltable$Comparison)
+  percenthybridsuccess <- numhybridsuccess/length(hybridinds)
+  percentPureSuccess <- numpuresuccess/length(pureinds)
   
-  return(percentsuccess)
+  propsuccessvect <- paste("Total Proportion of Success: ", percentsuccess, sep = "")
+  propsuccesshybrid <- paste("Hybrid Proportion of Success: ", percenthybridsuccess, sep = "")
+  propsuccesspure <- paste("Pure Proportion of Success: ", percentPureSuccess, sep = "")
   
+  print(propsuccessvect)
+  print(propsuccesspure)
+  print(propsuccesshybrid)
+
 }
 
-
+maketable <- function(demeQmat, results, originallabels){
+  #after genind2Structure
+  str(demeQmat) 
+  clusterdf <- demeQmat
+  tabledecisions <- structuredecision(results)
+  tablewithboth <- AddingTrueGroup(tabledecisions)
+  completetable <- CompareQ(tablewithboth, originallabels)
+  print(completetable)
+  SuccessProp <- ProportionOfSuccess(completetable)
+  SuccessProp
+}
 
 
 #Pipeline-----------------------------------------------------------------------
 
 
 
-setwd("/Users/CHendrikse/Documents/fsc26_win64/4Demeshistchange/")
+setwd("/Users/CHendrikse/Documents/fsc26_win64")
 setwd("/Users/clhen/Documents/Internship/fsc26_win64/4DemeFixed/")
 arpfilename<- "4DemeFixed_1_1" #without .arp
 
 
 labels <-makeStructure(arpfilename)
-maketable()
+
+demeQmat <- readQ("/Users/clhen/Documents/Internship/results4deme1.txt")  
+demeQmat <- readQ("/Users/clhen/Documents/Internship/results4deme1.txt") 
+results <- demeQmat$results4deme1
+hold <- maketable(demeQmat, results, labels)
