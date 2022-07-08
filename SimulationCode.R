@@ -5,6 +5,7 @@ library(adegenet)
 library(pophelper)
 library(sjmisc)
 library(dplyr)
+library(xlsx)
 
 
 
@@ -40,11 +41,10 @@ makeStructure <- function(filename){
   #making function to store to vector
   final_genind_df <- genind2df(final_genind)
   actual_values <- as.vector(final_genind_df$pop)
-  
-  return(actual_values)
-  
   #writing values into structure file
   genind2structure(final_genind, file="parentandhybrid", pops=FALSE)
+  
+  return(actual_values)
 }
 
 #genind to structure file code (citation in my drive)
@@ -309,6 +309,8 @@ ProportionOfSuccess <- function(finaltable){
   print(propsuccessvect)
   print(propsuccesspure)
   print(propsuccesshybrid)
+  
+  #write.xlsx(finaltable,file = "FinalTable")
 
 }
 
@@ -330,13 +332,13 @@ maketable <- function(demeQmat, results, originallabels){
 
 
 setwd("/Users/CHendrikse/Documents/fsc26_win64")
-setwd("/Users/clhen/Documents/Internship/fsc26_win64/4DemeFixed/")
-arpfilename<- "4DemeFixed_1_1" #without .arp
+setwd("/Users/clhen/Documents/HybridSimulation/SimParFiles/8DemeFixed/")
+arpfilename<- "8DemeFixed_1_1" #without .arp
 
 
 labels <-makeStructure(arpfilename)
 
-demeQmat <- readQ("/Users/clhen/Documents/HybridSimulation/Structure/Outputs/parentandhybrid4Deme_4_1_f")  
+demeQmat <- readQ("/Users/clhen/Documents/HybridSimulation/Structure/Outputs/parentandhybrid8Deme_8_1_f")  
 demeQmat <- readQ("/Users/clhen/Documents/Internship/results4deme1.txt") 
-results <- demeQmat$parentandhybrid4Deme_4_1_f
+results <- demeQmat$parentandhybrid8Deme_8_1_f
 hold <- maketable(demeQmat, results, labels)
