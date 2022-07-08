@@ -87,7 +87,7 @@ genind2structure <- function(obj, file="", pops=FALSE){
   }
   
   # export table
-  write.table(tab, file=file, sep="\t", quote=FALSE, row.names=FALSE)
+ #write.table(tab, file=file, sep="\t", quote=FALSE, row.names=FALSE)
 } #put pops = true need to call it differently
 
 
@@ -309,6 +309,7 @@ ProportionOfSuccess <- function(finaltable){
   print(propsuccessvect)
   print(propsuccesspure)
   print(propsuccesshybrid)
+  warning("Correct values based on Structure")
   
   #write.xlsx(finaltable,file = "FinalTable")
 
@@ -332,13 +333,13 @@ maketable <- function(demeQmat, results, originallabels){
 
 
 setwd("/Users/CHendrikse/Documents/fsc26_win64")
-setwd("/Users/clhen/Documents/HybridSimulation/SimParFiles/8DemeFixed/")
+setwd("/Users/CHendrikse/Documents/HybridSimulation/SimParFiles/8DemeFixed/")
 arpfilename<- "8DemeFixed_1_1" #without .arp
 
 
 labels <-makeStructure(arpfilename)
 
-demeQmat <- readQ("/Users/clhen/Documents/HybridSimulation/Structure/Outputs/parentandhybrid8Deme_8_1_f")  
+demeQmat <- readQ("/Users/CHendrikse/Documents/HybridSimulation/SimParFiles/8DemeFixed/8deme/50_50/Results/50_50_run_1_f")  
 demeQmat <- readQ("/Users/clhen/Documents/Internship/results4deme1.txt") 
-results <- demeQmat$parentandhybrid8Deme_8_1_f
+results <- demeQmat$`50_50_run_1_f`
 hold <- maketable(demeQmat, results, labels)
