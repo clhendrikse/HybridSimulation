@@ -7,11 +7,11 @@ library(sjmisc)
 library(dplyr)
 library(xlsx)
 
-
+labels <-makeStructure(arpfilename, a)
 
 #functions ---------------------------------------------------------------------
 # Function converting .arp file to a .gen file 
-makeStructure <- function(filename){
+makeStructure <- function(filename,a){
   
   #takes the file name and adds .arp so it can be found in the file
   addarp <- paste(arpfilename, ".arp", sep="")
@@ -24,7 +24,6 @@ makeStructure <- function(filename){
   #taking the genpop object and separating it into genind objects
   individuals <- seppop(genindobj,res.type="genind")
   
-  
   #hybridizing pop1 and pop2
   hybrids <- hybridize(individuals[["pop1"]], individuals[["pop2"]], pop = "hybrid", n=10)
   
@@ -32,23 +31,24 @@ makeStructure <- function(filename){
   #note: hybridize does not store parents
   #repooling the first two species and the hybrids
   final_genind <- repool(individuals[["pop1"]], individuals[["pop2"]], hybrids)
-  
+  final_genind@pop
   #adding in the other species individuals after the hybrids (sp1,sp2,hybrids,sp3,sp4...)
-  a <- 3
-  while(a <= length(names(individuals))){
-    popname <- paste("pop", a, sep = "")
+  b <- 3
+  while(b <= length(names(individuals))){
+    popname <- paste("pop", b, sep = "")
     final_genind <- repool(final_genind, individuals[[popname]])
     
-    a <- a+1
+    b <- b+1
   }
   
   #making function to store to vector
   final_genind_df <- genind2df(final_genind)
   actual_values <- as.vector(final_genind_df$pop)
   
-  
   #writing values into structure file
-  genind2structure(final_genind, file="parentandhybrid", pops=FALSE)
+
+  filenameforstruct <- paste("parentandhybrid", a, sep="")
+  genind2structure(final_genind, file= filenameforstruct, pops=FALSE)
   
   #return the labels for individuals in the order they are in the file
   return(actual_values)
@@ -94,7 +94,7 @@ genind2structure <- function(obj, file="", pops=FALSE){
   }
   
   # export table
- #write.table(tab, file=file, sep="\t", quote=FALSE, row.names=FALSE)
+ write.table(tab, file=file, sep="\t", quote=FALSE, row.names=FALSE)
 } #put pops = true need to call it differently
 
 
@@ -389,12 +389,16 @@ maketable <- function(demeQmat, results, originallabels,numberIndsPerSpecies){
 
 
 #set the working directory and list the file name
-setwd("/Users/CHendrikse/Documents/fsc26_win64/8DemesLessMigration/")
-arpfilename<- "8DemesLessMigration_1_1" #without .arp
+setwd("/Users/CHendrikse/Documents/HybridSimulation/SimParFiles/8Demes20inds/")
+NumArpFiles <- length(list.files(path = ))-2
+a <- 1
+while(a <= NumArpFiles){
+arpfilename<- paste("8Demes20inds_1_", a, sep = "") #without .arp
 
 #make the structure file and store the original species groups
-labels <-makeStructure(arpfilename)
-
+labels <-makeStructure(arpfilename, a)
+a<- a+1
+}
 #reads structure's results and makes the table and outputs the proportion of success
 demeQmat <- readQ("/Users/CHendrikse/Documents/HybridSimulation/Structure/Outputs/parentandhybrid8DemeFixed_8_1_f")  
 demeQmat <- readQ("/Users/clhen/Documents/Internship/results4deme1.txt") 
