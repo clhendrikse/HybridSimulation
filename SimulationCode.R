@@ -11,7 +11,7 @@ labels <-makeStructure(arpfilename, a)
 
 #functions ---------------------------------------------------------------------
 # Function converting .arp file to a .gen file 
-makeStructure <- function(filename,a){
+makeStructure <- function(filename,a, numinds){
   
   #takes the file name and adds .arp so it can be found in the file
   addarp <- paste(arpfilename, ".arp", sep="")
@@ -25,7 +25,7 @@ makeStructure <- function(filename,a){
   individuals <- seppop(genindobj,res.type="genind")
   
   #hybridizing pop1 and pop2
-  hybrids <- hybridize(individuals[["pop1"]], individuals[["pop2"]], pop = "hybrid", n=10)
+  hybrids <- hybridize(individuals[["pop1"]], individuals[["pop2"]], pop = "hybrid", n=numinds)
   
   #storing all species info into one genind object 4_1 referring to 4 demes n=1
   #note: hybridize does not store parents
@@ -210,7 +210,7 @@ structuredecision <- function(obj){
     }
     if(row.names(obj)[v] %in% pure7) {
       decision <- c(decision,"cluster7")
-      values <- c(values,v)
+    
       
     }
     if(row.names(obj)[v] %in% pure8) {
@@ -281,8 +281,9 @@ AddingTrueGroup <- function(tabledecisions){
 }
 
 #comparing groups and giving either TRUE or FALSE values depending on if STRUCTURE was correct in the individuals placement
-CompareQ <- function(tabletocompare, originalLabels){
+CompareQ <- function(tabletocompare, originalLabels, numberIndsPerSpecies){
   
+  tabletocompare <- tabledecisions
   bookmark <- 1
   #creating initial comparison object
   if(tabletocompare$Decision[1] %in% tabletocompare$ActualVals[1]){
@@ -305,9 +306,43 @@ CompareQ <- function(tabletocompare, originalLabels){
   }
   
   #adding comparison to new column in the table
-  tablewithboth$Comparison <- comparison
+  tabletocompare$Comparison <- comparison
+  #taking the number of individuals per species and finding the result for each group if two or more groups are put into the same cluster, a warning will print
+  x<- numberIndsPerSpecies -1
+  clusters <- as.numeric(0)
+  numerror <- 0
+  while(x <= length(tabledecisions$Cluster1)){
+    clusters <- c(clusters, tabledecisions$Decision[x])
+    x <- x+numberIndsPerSpecies
+    uniqueclusters <- unique(clusters)
+  }
+  clusters <- clusters[-1]
+  uniqueclusters <- uniqueclusters[-1]
+  if(length(uniqueclusters) != length(clusters)){
+    duplicates <- duplicated(clusters)
+    positionduplicates <- str_find(duplicates, TRUE)
+    repeatedclusters <- clusters[duplicates]
+    decision <- tabletocompare$Decision
+    test <- tabletocompare$Decision[1] != repeatedclusters
+
+  d <- 1
+  while (d < length(tabletocompare$Decision)){
+        if(tabletocompare$Decision[d] == repeatedclusters){
+          tabletocompare$Comparison[d] <- "Error"
+        }
+    d <- d+1
+  }
+    tabletocompare$Comparison[positionduplicates] <- "error1"
+    #tabletocompare$Comparison[positionofDuplicate] <- "test"
+    warning("Number of clusters in decision does not match number of species")
+    
+
+    numerror <- numerror +1
+  }
+ 
+  
   #putting the table into a new object
-  newtable <- tablewithboth
+  newtable <- tabletocompare
   #adding original species into the table 
   newtable$Orignial <- labels
   
@@ -345,20 +380,7 @@ ProportionOfSuccess <- function(finaltable,numberIndsPerSpecies,numerror){
   print(propsuccesshybrid)
   warning("Correct values based on Structure")
   
-  #taking the number of individuals per species and finding the result for each group if two or more groups are put into the same cluster, a warning will print
-  a<- numberIndsPerSpecies
-  clusters <- as.numeric(0)
-  while(a <= length(finaltable$Cluster1)){
-    clusters <- c(clusters, finaltable$Decision[a])
-    a <- a+numberIndsPerSpecies
-    uniqueclusters <- unique(clusters)
-  }
-  if(length(uniqueclusters) != length(clusters))
-  {
-    warning("Number of clusters in decision does not match number of species")
-    numerror <- percenterror +1
-  }
-  return(numerror)
+
 
 }
 
@@ -369,12 +391,11 @@ maketable <- function(results, originallabels,numberIndsPerSpecies,percenterror)
   #outputs a warning if there are more than 10 species
   if(ncol(tabledecisions) >11){
     warning("Functions only work with 10 species or less")
-    return(0)
   }
   #adding the true clusters
-  tablewithboth <- AddingTrueGroup(tabledecisions)
+  tabledecisions <- AddingTrueGroup(tabledecisions)
   #adding comparison (TRUE/FALSE) values and the original labels of the species they belong to
-  completetable <- CompareQ(tablewithboth, labels)
+  completetable <- CompareQ(tabledecisions, labels, numberIndsPerSpecies)
   #prints the table
   print(completetable)
   #prints the proportion of success for the pure species, the hybrids, and all species returns the number of times the error is recorded
@@ -385,17 +406,17 @@ maketable <- function(results, originallabels,numberIndsPerSpecies,percenterror)
 
 #Pipeline-----------------------------------------------------------------------
 
-
+numberIndsPerSpecies <- 10
 
 #set the working directory and list the file name
-setwd("/Users/CHendrikse/Documents/HybridSimulation/SimParFiles/8Demes20inds/")
+setwd("/Users/CHendrikse/Documents/fsc26_win64/8Demes/")
 NumArpFiles <- length(list.files(path = ))-2
 a <- 1
 while(a <= NumArpFiles){
-arpfilename<- paste("8Demes20inds_1_", a, sep = "") #without .arp
+arpfilename<- paste("8Demes_1_", a, sep = "") #without .arp
 
 #make the structure file and store the original species groups
-labels <-makeStructure(arpfilename, a)
+labels <-makeStructure(arpfilename, a,numberIndsPerSpecies)
 a<- a+1
 }
 #reads structure's results and makes the table and outputs the proportion of success
@@ -403,7 +424,7 @@ demeQmat <- readQ("/Users/CHendrikse/Documents/HybridSimulation/Structure/Output
 demeQmat <- readQ("/Users/clhen/Documents/Internship/results4deme1.txt") 
 results <- demeQmat$parentandhybrid8DemeFixed_8_1_f
   #input the number of individuals for the species so the CompareQ function can compare the number of clusters found to the number of clusters there should be
-numberIndsPerSpecies <- 10
+
 percenterror <- 0
 hold <- maketable(results, labels, numberIndsPerSpecies, percenterror)
 
