@@ -424,7 +424,7 @@ demeQmat <- readQ("/Users/CHendrikse/Documents/HybridSimulation/Structure/Output
 demeQmat <- readQ("/Users/clhen/Documents/Internship/results4deme1.txt") 
 results <- demeQmat$parentandhybrid8DemeFixed_8_1_f
   #input the number of individuals for the species so the CompareQ function can compare the number of clusters found to the number of clusters there should be
-
+#
 percenterror <- 0
 hold <- maketable(results, labels, numberIndsPerSpecies, percenterror)
 
