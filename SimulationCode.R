@@ -327,13 +327,13 @@ CompareQ <- function(tabletocompare, originalLabels, numberIndsPerSpecies){
 
   d <- 1
   while (d < length(tabletocompare$Decision)){
-        if(tabletocompare$Decision[d] == repeatedclusters){
+    findcluster <- tabletocompare$Decision[d] == repeatedclusters
+        if(str_contains(findcluster, TRUE) == TRUE){
           tabletocompare$Comparison[d] <- "Error"
         }
     d <- d+1
   }
-    tabletocompare$Comparison[positionduplicates] <- "error1"
-    #tabletocompare$Comparison[positionofDuplicate] <- "test"
+
     warning("Number of clusters in decision does not match number of species")
     
 
