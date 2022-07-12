@@ -318,7 +318,7 @@ CompareQ <- function(tabletocompare, originalLabels){
 
 #Function calculating total proportion of successes, proportion of success for pure species, and proportion of success for hybrids
 #will not run properly if structure does not use the correct number of clusters
-ProportionOfSuccess <- function(finaltable,numberIndsPerSpecies){
+ProportionOfSuccess <- function(finaltable,numberIndsPerSpecies,numerror){
   
   #finding the hybrid and pure individuals
   hybridinds <- str_find(finaltable$ActualVals, "hybrid")
@@ -356,16 +356,15 @@ ProportionOfSuccess <- function(finaltable,numberIndsPerSpecies){
   if(length(uniqueclusters) != length(clusters))
   {
     warning("Number of clusters in decision does not match number of species")
+    numerror <- percenterror +1
   }
-  
+  return(numerror)
 
 }
 
 #master function to create the table and calculate proportion of success
-maketable <- function(demeQmat, results, originallabels,numberIndsPerSpecies){
+maketable <- function(results, originallabels,numberIndsPerSpecies,percenterror){
   #after genind2Structure
-  str(demeQmat) 
-  clusterdf <- demeQmat
   tabledecisions <- structuredecision(results)
   #outputs a warning if there are more than 10 species
   if(ncol(tabledecisions) >11){
@@ -378,9 +377,9 @@ maketable <- function(demeQmat, results, originallabels,numberIndsPerSpecies){
   completetable <- CompareQ(tablewithboth, labels)
   #prints the table
   print(completetable)
-  #prints the proportion of success for the pure species, the hybrids, and all species
-  SuccessProp <- ProportionOfSuccess(completetable, numberIndsPerSpecies)
-  SuccessProp
+  #prints the proportion of success for the pure species, the hybrids, and all species returns the number of times the error is recorded
+  numerror <- ProportionOfSuccess(completetable, numberIndsPerSpecies,percenterror)
+
 }
 
 
@@ -405,5 +404,6 @@ demeQmat <- readQ("/Users/clhen/Documents/Internship/results4deme1.txt")
 results <- demeQmat$parentandhybrid8DemeFixed_8_1_f
   #input the number of individuals for the species so the CompareQ function can compare the number of clusters found to the number of clusters there should be
 numberIndsPerSpecies <- 10
-hold <- maketable(demeQmat, results, labels, numberIndsPerSpecies)
+percenterror <- 0
+hold <- maketable(results, labels, numberIndsPerSpecies, percenterror)
 
