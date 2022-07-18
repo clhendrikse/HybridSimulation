@@ -309,7 +309,9 @@ CompareQ <- function(tabletocompare, originalLabels, numberIndsPerSpecies){
   tabletocompare$Comparison <- comparison
   return(tabletocompare)
   }
- 
+
+#Finds the proportion of times STRUCTURE incorrectly labeled individuals from two different species as the same
+#Note: if each species has 10 inds, but STRUCTURE labeled 20 inds in the same cluster, all 20 inds are labeled as incorrect
 FindNumMergeError <- function(tabletocompare){
   #taking the number of individuals per species and finding the result for each group if two or more groups are put into the same cluster, a warning will print
   
@@ -358,7 +360,8 @@ FindNumMergeError <- function(tabletocompare){
     positionofError <- str_find(tabletocompare$Comparison,"Merge")
     numMergeError <- length(positionofError)
   
-}  
+  }  
+  #finds proportion of individuals with the error and returns the amount
   PropMergeError <- numMergeError/length(tabletocompare$Comparison)
   return(PropMergeError)
     
@@ -418,15 +421,17 @@ maketable <- function(results, originallabels,numberIndsPerSpecies,percenterror)
 }
 
 #put this in a while function
+#creates array to store proportion of individuals in each run that have the merge error
 CreateMergeErrorArray <- function(arpFilesLoc, StructFilesLoc, num){
+  #finds the arp files to create labels
   a <- 1
   totalFilesInFSCOut <- list.files(path = arpfilesloc)
   b <- 1
   d <- 1
   ArpFilesInFSCOut <- as.numeric(0)
   totalFilesInFSCOut
-  totalFilesInFSCOut[5]
   
+  #only search for .arp files
   while(b <= length(totalFilesInFSCOut)){
     searchforarp <- str_contains(totalFilesInFSCOut[b], ".arp")
         if(searchforarp == TRUE){
@@ -440,7 +445,7 @@ CreateMergeErrorArray <- function(arpFilesLoc, StructFilesLoc, num){
   NumArpFiles <- length(ArpFilesInFSCOut)
   a <- 1
   labelsList <- list()
-  
+  #while a is less than or equal to the number of arp files, create labels for each file
   while(a <= NumArpFiles){
     arpfilename <- ArpFilesInFSCOut[a]
     FileWithoutArp <- unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
@@ -450,14 +455,15 @@ CreateMergeErrorArray <- function(arpFilesLoc, StructFilesLoc, num){
   }
 
   #input filename in ""
-  
+  #lists directories is specified structure path
   structOutFolders <- list.dirs(path=)
   StructOutFiles <- list.files(path = StructOutLoc)
   NumStructOutFiles <- length(StructOutFiles)
   makeTablesCounter <- 1
   propMergeError <- vector()
+  #creates initial object for all the tables for each run
   allTables <- vector(mode = "list", length = NumStructOutFiles)
-
+  #creates vector of proportion of error for each structure file in a run
   while(makeTablesCounter <= length(StructOutFiles)){
     demeQmat <- readQ(paste(StructOutLoc,StructOutFiles[makeTablesCounter],sep = ""))  
     
@@ -479,7 +485,7 @@ CreateMergeErrorArray <- function(arpFilesLoc, StructFilesLoc, num){
 numberIndsPerSpecies <- 10
 
 #set the working directory and list the file name
-setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/4Deme10ind/")
+setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/8Deme10ind/")
 setwd("/Users/CHendrikse/Documents/fsc26_win64/8Demes/")
 arpfilesloc <- getwd()
 arpFiles <- list.files(path = arpfilesloc)
@@ -490,7 +496,7 @@ NumFiles <- length(list.files(path = ))-2
 a <- 1
 arpfilename <- as.numeric(0)
 while(a <= NumFiles){
-  arpfilename<- paste("4DemeFixed_1_", a, sep = "") #without .arp
+  arpfilename<- paste("Arp/8Deme10ind_1_1.arp", a, sep = "") #without .arp
 
 #make the structure file and store the original species groups
 labels <-makeStructure(arpfilename, a,numberIndsPerSpecies)
