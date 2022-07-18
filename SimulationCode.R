@@ -1,12 +1,11 @@
 remotes::install_github('royfrancis/pophelper')
+
 library(remotes)
 library(diveRsity)
 library(adegenet)
 library(pophelper)
 library(sjmisc)
 library(dplyr)
-
-labels <-makeStructure(arpfilename, a)
 
 #functions ---------------------------------------------------------------------
 # Function converting .arp file to a .gen file 
@@ -46,15 +45,16 @@ makeStructure <- function(filename,a, numinds){
   
   #writing values into structure file
 
-  filenameforstruct <- paste("parentandhybrid", a, sep="")
-  genind2structure(final_genind, file= filenameforstruct, pops=FALSE)
+  # filenameforstruct <- paste("parentandhybrid", a, sep="")
+  filenameforstruct <- paste0("parentandhybrid", a, ".str")
+  genind2structure(final_genind, file= filenameforstruct, pops=TRUE)
   
   #return the labels for individuals in the order they are in the file
   return(actual_values)
 }
 
 #genind to structure file code (citation in my drive)
-genind2structure <- function(obj, file="", pops=FALSE){
+genind2structure <- function(obj, file="", pops=TRUE){
   if(!"genind" %in% class(obj)){
     warning("Function was designed for genind objects.")
   }
@@ -93,6 +93,7 @@ genind2structure <- function(obj, file="", pops=FALSE){
   }
   
   # export table
+  names(tab)[1] <- ""
  write.table(tab, file=file, sep="\t", quote=FALSE, row.names=FALSE)
 } #put pops = true need to call it differently
 
@@ -282,7 +283,7 @@ AddingTrueGroup <- function(tabledecisions){
 #comparing groups and giving either TRUE or FALSE values depending on if STRUCTURE was correct in the individuals placement
 CompareQ <- function(tabletocompare, originalLabels, numberIndsPerSpecies){
   
-  tabletocompare <- tabledecisions
+
   bookmark <- 1
   #creating initial comparison object
   if(tabletocompare$Decision[1] %in% tabletocompare$ActualVals[1]){
@@ -314,18 +315,17 @@ FindNumMergeError <- function(tabletocompare){
   
   #starting point for finding the population clusters
   x<- numberIndsPerSpecies -1
-  
   #Creating initial object for the clusters and number of times the error occurres
   clusters <- as.numeric(0)
   numMergeError <- 0
   
   #finds all the species' cluster decisions and look for repeats using unique clusters
-  while(x <= length(tabledecisions$Cluster1)){
-    clusters <- c(clusters, tabledecisions$Decision[x])
+  while(x <= length(tabletocompare$Cluster1)){
+    clusters <- c(clusters, tabletocompare$Decision[x])
     x <- x+numberIndsPerSpecies
     uniqueclusters <- unique(clusters)
   }
-  
+
   #Removes initial "0" value
   clusters <- clusters[-1]
   uniqueclusters <- uniqueclusters[-1]
@@ -357,26 +357,13 @@ FindNumMergeError <- function(tabletocompare){
     #counts how many times the merge error occurs
     positionofError <- str_find(tabletocompare$Comparison,"Merge")
     numMergeError <- length(positionofError)
-    PropMergeError <- numMergeError/length(tabletocompare$Comparison)
-  return(PropMergeError)
-
   
 }  
+  PropMergeError <- numMergeError/length(tabletocompare$Comparison)
+  return(PropMergeError)
     
-    
-  
-  #putting the table into a new object
-  newtable <- tabletocompare
-  #adding original species into the table 
-  newtable$Orignial <- labels
-  
-  #printing and returning the table
-  print(newtable)
-  return(newtable)
+
 }
-
-
-
 
 
 #Function calculating total proportion of successes, proportion of success for pure species, and proportion of success for hybrids
@@ -431,7 +418,7 @@ maketable <- function(results, originallabels,numberIndsPerSpecies,percenterror)
 }
 
 #put this in a while function
-CreateMergeErrorArray <- Function(arpFilesLoc, StructFilesLoc, num){
+CreateMergeErrorArray <- function(arpFilesLoc, StructFilesLoc, num){
   a <- 1
   totalFilesInFSCOut <- list.files(path = arpfilesloc)
   b <- 1
@@ -439,19 +426,21 @@ CreateMergeErrorArray <- Function(arpFilesLoc, StructFilesLoc, num){
   ArpFilesInFSCOut <- as.numeric(0)
   totalFilesInFSCOut
   totalFilesInFSCOut[5]
-while(b <= length(totalFilesInFSCOut)){
-  searchforarp <- str_contains(totalFilesInFSCOut[b], ".arp")
-  if(searchforarp == TRUE){
-    ArpFilesInFSCOut[d] <- totalFilesInFSCOut[b]
-    d <- d+1
+  
+  while(b <= length(totalFilesInFSCOut)){
+    searchforarp <- str_contains(totalFilesInFSCOut[b], ".arp")
+        if(searchforarp == TRUE){
+          ArpFilesInFSCOut[d] <- totalFilesInFSCOut[b]
+          d <- d+1
+        }
+
+    b <- b+1
   }
   
-  b <- b+1
-}
-  
   NumArpFiles <- length(ArpFilesInFSCOut)
-a <- 1
-labelsList <- list()
+  a <- 1
+  labelsList <- list()
+  
   while(a <= NumArpFiles){
     arpfilename <- ArpFilesInFSCOut[a]
     FileWithoutArp <- unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
@@ -460,22 +449,26 @@ labelsList <- list()
     a<- a+1
   }
 
-#input filename in ""
-StructOutFiles <- list.files(path = StructOutLoc)
-NumStructOutFiles <- length(StructOutFiles)
-makeTablesCounter <- 1
-propMergeError <- vector()
-while(makeTablesCounter <= length(StructOutFiles)){
-demeQmat <- readQ(paste(StructOutLoc,StructOutFiles[makeTablesCounter],sep = ""))  
-
-results <- demeQmat[[StructOutFiles[makeTablesCounter]]]
-
-  percenterror <- 0
+  #input filename in ""
+  
+  structOutFolders <- list.dirs(path=)
+  StructOutFiles <- list.files(path = StructOutLoc)
+  NumStructOutFiles <- length(StructOutFiles)
+  makeTablesCounter <- 1
+  propMergeError <- vector()
   allTables <- vector(mode = "list", length = NumStructOutFiles)
-  allTables[[makeTablesCounter]] <- maketable(results, labelsList[[1]], numberIndsPerSpecies, percenterror)
-  propMergeError[makeTablesCounter] <- FindNumMergeError(allTables[[makeTablesCounter]])
-  makeTablesCounter <- makeTablesCounter+1
-}
+
+  while(makeTablesCounter <= length(StructOutFiles)){
+    demeQmat <- readQ(paste(StructOutLoc,StructOutFiles[makeTablesCounter],sep = ""))  
+    
+    results <- demeQmat[[StructOutFiles[makeTablesCounter]]]
+    
+      percenterror <- 0
+      allTables[[makeTablesCounter]] <- maketable(results, labelsList[[1]], numberIndsPerSpecies, percenterror)
+      tempvect <- FindNumMergeError(allTables[[makeTablesCounter]])
+      propMergeError[makeTablesCounter] <- tempvect
+      makeTablesCounter <- makeTablesCounter+1
+  }
   
   
 }
@@ -486,24 +479,25 @@ results <- demeQmat[[StructOutFiles[makeTablesCounter]]]
 numberIndsPerSpecies <- 10
 
 #set the working directory and list the file name
-idkk <- "/Users/CHendrikse/Documents/fsc26_win64/4Demes/"
+setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/4Deme10ind/")
 setwd("/Users/CHendrikse/Documents/fsc26_win64/8Demes/")
 arpfilesloc <- getwd()
 arpFiles <- list.files(path = arpfilesloc)
-NumArpFiles <- length(list.files(path = ))-2
+NumFiles <- length(list.files(path = ))-2
 
 
 
 a <- 1
-while(a <= NumArpFiles){
-arpfilename<- paste("8Demes_1_", a, sep = "") #without .arp
+arpfilename <- as.numeric(0)
+while(a <= NumFiles){
+  arpfilename<- paste("4DemeFixed_1_", a, sep = "") #without .arp
 
 #make the structure file and store the original species groups
 labels <-makeStructure(arpfilename, a,numberIndsPerSpecies)
 a<- a+1
 }
 #reads structure's results and makes the table and outputs the proportion of success
-StructOutLoc <- "/Users/CHendrikse/Documents/StructOutputs/"
+StructOutFilesLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/4Deme10ind/"
 #input filename in ""
 demeQmat <- readQ(paste(StructOutLoc, "parentandhybrid8DemeFixed_8_1_f", sep = ""))  
 demeQmat <- readQ("/Users/clhen/Documents/Internship/results4deme1.txt") 
@@ -514,6 +508,10 @@ results <- demeQmat$parentandhybrid8DemeFixed_8_1_f
 ErrorPropVect
 
 #set directory with number of structure output files
+#change with arp folder to -2
+StructOutFolderNum <- length(list.dirs(path = ))-1
+Allfolders <- str_find(list.dirs(path = ), "Out")
+
 NumStructOutFiles <- length(list.files(path = "/Users/CHendrikse/Documents/HybridSimulation/Structure/Outputs/parentandhybrid8Deme_20220713/"))
 #total number of merge error/()
 PropMergeError <- MergeErrorNumVect/(length(labels))
