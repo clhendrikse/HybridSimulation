@@ -456,13 +456,20 @@ CreateMergeErrorArray <- function(arpFilesLoc, StructFilesLoc, num){
 
   #input filename in ""
   #lists directories is specified structure path
-  structOutFolders <- list.dirs(path=)
+  structOutFolders <- list.dirs(path=)[-1]
+  structOutFolders <- structOutFolders[-1]
+  bookmark <- 1
+  ErrorMatrix <- matrix()
+  while(bookmark <= length(structOutFolders)){
+  StructFolderX <- structOutFolders[bookmark]
   StructOutFiles <- list.files(path = StructOutLoc)
   NumStructOutFiles <- length(StructOutFiles)
   makeTablesCounter <- 1
   propMergeError <- vector()
   #creates initial object for all the tables for each run
   allTables <- vector(mode = "list", length = NumStructOutFiles)
+  bookmark <- bookmark + 1
+  }
   #creates vector of proportion of error for each structure file in a run
   while(makeTablesCounter <= length(StructOutFiles)){
     demeQmat <- readQ(paste(StructOutLoc,StructOutFiles[makeTablesCounter],sep = ""))  
@@ -485,7 +492,7 @@ CreateMergeErrorArray <- function(arpFilesLoc, StructFilesLoc, num){
 numberIndsPerSpecies <- 10
 
 #set the working directory and list the file name
-setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/8Deme10ind/")
+setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/4Deme10ind/")
 setwd("/Users/CHendrikse/Documents/fsc26_win64/8Demes/")
 arpfilesloc <- getwd()
 arpFiles <- list.files(path = arpfilesloc)
@@ -496,14 +503,14 @@ NumFiles <- length(list.files(path = ))-2
 a <- 1
 arpfilename <- as.numeric(0)
 while(a <= NumFiles){
-  arpfilename<- paste("Arp/8Deme10ind_1_1.arp", a, sep = "") #without .arp
+  arpfilename<- paste("4DemeFixed_1_", a, sep = "") #without .arp
 
 #make the structure file and store the original species groups
 labels <-makeStructure(arpfilename, a,numberIndsPerSpecies)
 a<- a+1
 }
 #reads structure's results and makes the table and outputs the proportion of success
-StructOutFilesLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/4Deme10ind/"
+StructOutLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/4Deme10ind/"
 #input filename in ""
 demeQmat <- readQ(paste(StructOutLoc, "parentandhybrid8DemeFixed_8_1_f", sep = ""))  
 demeQmat <- readQ("/Users/clhen/Documents/Internship/results4deme1.txt") 
@@ -515,8 +522,12 @@ ErrorPropVect
 
 #set directory with number of structure output files
 #change with arp folder to -2
-StructOutFolderNum <- length(list.dirs(path = ))-1
-Allfolders <- str_find(list.dirs(path = ), "Out")
+
+allfolders <- list.dirs(path = )
+#removes initial value and Structin folder
+StructOutFolders <- allfolders[-1]
+StructOutFolders <- StructOutFolders[-1]
+StructFolderNum <- length(StructOutFolders)
 
 NumStructOutFiles <- length(list.files(path = "/Users/CHendrikse/Documents/HybridSimulation/Structure/Outputs/parentandhybrid8Deme_20220713/"))
 #total number of merge error/()
