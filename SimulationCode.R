@@ -9,12 +9,12 @@ library(dplyr)
 
 #functions ---------------------------------------------------------------------
 # Function converting .arp file to a .gen file 
-makeStructure <- function(filename,a, numinds){
-  
-  #takes the file name and adds .arp so it can be found in the file
-  addarp <- paste(filename, ".arp", sep="")
-  arp2gen(addarp)
-  
+makeStructure <- function(filename,a, numinds, ScenarioFolder){
+
+  ArpFileLocation <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename, ".arp")
+  #takes the file name and adds .arp so it can be found in the file\
+  arp2gen(ArpFileLocation)
+  filename <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename)
   #turning file into a genind object
   addgen<- paste(filename, ".gen", sep="")
   genindobj <- read.genepop(addgen, ncode = 3)
@@ -310,6 +310,14 @@ CompareQ <- function(tabletocompare, originalLabels, numberIndsPerSpecies){
   return(tabletocompare)
   }
 
+
+
+
+
+
+
+
+
 #Finds the proportion of times STRUCTURE incorrectly labeled individuals from two different species as the same
 #Note: if each species has 10 inds, but STRUCTURE labeled 20 inds in the same cluster, all 20 inds are labeled as incorrect
 FindNumMergeError <- function(tabletocompare){
@@ -367,6 +375,9 @@ FindNumMergeError <- function(tabletocompare){
     
 
 }
+
+
+
 
 
 #Function calculating total proportion of successes, proportion of success for pure species, and proportion of success for hybrids
@@ -433,7 +444,7 @@ maketable <- function(results, originallabels,numberIndsPerSpecies,percenterror)
 
 #put this in a while function
 #creates array to store proportion of individuals in each run that have the merge error
-CreateMergeErrorArray <- function(ScenarioLoc, arpFilesLoc, StructFilesLoc, num){
+CreateMergeErrorArray <- function(ScenarioLoc){
   ArrayBookmark <- 1
   ScenarioList <- list.dirs(path = ,full.names = FALSE, 
                         recursive = FALSE)
@@ -479,16 +490,17 @@ CreateMergeErrorArray <- function(ScenarioLoc, arpFilesLoc, StructFilesLoc, num)
 
     b <- b+1
   }
-  
+  ScenarioFolder <- paste0(ScenarioList[ArrayBookmark],"/")
   NumArpFiles <- length(ArpFilesInFSCOut)
   a <- 1
   labelsList <- list()
   #while a is less than or equal to the number of arp files, create labels for each file
   while(a <= NumArpFiles){
     arpfilename <- ArpFilesInFSCOut[a]
+    arpfilename = unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
     FileWithoutArp <- unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
     #make the structure file and store the original species groups
-    labelsList[[a]] <-makeStructure(FileWithoutArp, a,numberIndsPerSpecies)
+    labelsList[[a]] <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder)
     a<- a+1
   }
 
@@ -534,58 +546,44 @@ CreateMergeErrorArray <- function(ScenarioLoc, arpFilesLoc, StructFilesLoc, num)
   
   ErrorArray[,,ArrayBookmark] <- MergeErrorMatrix
   ArrayBookmark <- ArrayBookmark +1
-}
+  }
+  print(ErrorArray)
 }
 
 
 #Pipeline-----------------------------------------------------------------------
 
+#Setting values the functions need
 numberIndsPerSpecies <- 10
-
-#set the working directory and list the file name
 setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/")
-setwd("/Users/CHendrikse/Documents/fsc26_win64/8Demes/")
+ScenarioFolder <- "4Deme10ind/"
+StructOutLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/4Deme10ind/"
+
+#Before Running Structure----
 ScenarioLoc <- getwd()
 arpfilesloc <- getwd()
+listArpFiles <- vector()
 arpFiles <- list.files(path = arpfilesloc)
-NumFiles <- length(list.files(path = ))-2
+arpFileBookmark <- 1
+NumtotalArpFiles <- length(arpFiles)
 
-
-
+while(arpFileBookmark <= NumtotalArpFiles ){
+  if(str_contains(arpFiles[arpFileBookmark], ".arp") == TRUE){
+    listArpFiles <- c(listArpFiles, arpFiles[arpFileBookmark]) 
+  }
+  arpFileBookmark <- arpFileBookmark +1
+}
 a <- 1
 arpfilename <- as.numeric(0)
-while(a <= NumFiles){
+while(a <= length(listArpFiles)){
   arpfilename<- paste("4DemeFixed_1_", a, sep = "") #without .arp
-
+filename <- arpfilename
 #make the structure file and store the original species groups
-labels <-makeStructure(arpfilename, a,numberIndsPerSpecies)
+labels <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder)
 a<- a+1
 }
-#reads structure's results and makes the table and outputs the proportion of success
-StructOutLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/4Deme10ind/"
-#input filename in ""
-demeQmat <- readQ(paste(StructOutLoc, "parentandhybrid8DemeFixed_8_1_f", sep = ""))  
-demeQmat <- readQ("/Users/clhen/Documents/Internship/results4deme1.txt") 
-results <- demeQmat$parentandhybrid8DemeFixed_8_1_f
-  #input the number of individuals for the species so the CompareQ function can compare the number of clusters found to the number of clusters there should be
-#
 
-ErrorPropVect
 
-#set directory with number of structure output files
-#change with arp folder to -2
 
-allfolders <- list.dirs(path = )
-#removes initial value and Structin folder
-StructOutFolders <- allfolders[-1]
-StructOutFolders <- StructOutFolders[-1]
-StructFolderNum <- length(StructOutFolders)
-
-#total number of merge error/()
-PropMergeError <- MergeErrorNumVect/(length(labels))
-
-MergeErrorNumVect <- CreateMergeErrorArray(ScenarioLoc, CompleteTable, arpfilesloc,StructOutLoc)
-
-#organize repo and come back
-getwd()
-list.dirs(path = )
+#After Structure: reads structure's results and makes the table and outputs the proportion of success----
+MergeErrorNumVect <- CreateMergeErrorArray(ScenarioLoc)
