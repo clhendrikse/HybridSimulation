@@ -376,10 +376,83 @@ FindNumMergeError <- function(tabletocompare){
 
 }
 
+FindP2HError <- function(completetable){
+ClusterBookmark <- 1
+numP2HError <- 0
+while(ClusterBookmark <= length(completetable$Cluster1)){
+  Calledhybrid <- str_contains(completetable$Decision[ClusterBookmark], "hybrid" )
+  IndisHybrid <- str_contains(completetable$ActualVals[ClusterBookmark], "hybrid")
+  if(Calledhybrid == TRUE && IndisHybrid == FALSE){
+    completetable$Comparison[ClusterBookmark] <- "P2H"
+    numP2HError <- numP2HError + 1
+  }
+  
+  ClusterBookmark <- ClusterBookmark +1
+}
+  
+  propP2HError <- numP2HError/length(completetable$Comparison)
+  return(propP2HError)
+   
+}
 
+FindH2PError <- function(completetable){
+  ClusterBookmark <- 1
+  numH2PError <- 0
+  while(ClusterBookmark <= length(completetable$Cluster1)){
+    Calledhybrid <- str_contains(completetable$Decision[ClusterBookmark], "hybrid" )
+    IndisHybrid <- str_contains(completetable$ActualVals[ClusterBookmark], "hybrid")
+    if(Calledhybrid == FALSE && IndisHybrid == TRUE){
+      completetable$Comparison[ClusterBookmark] <- "H2P"
+      numH2PError <- numP2HError + 1
+    }
+    
+    ClusterBookmark <- ClusterBookmark +1
+  }
+  
+  propH2PError <- numH2PError/length(completetable$Comparison)
+  return(propH2PError)
+  
+}
 
+FindPUnknown <- function(completetable){
+    ClusterBookmark <- 1
+    numPUError <- 0
+    while(ClusterBookmark <= length(completetable$Cluster1)){
+      CalledUnknown <- str_contains(completetable$Decision[ClusterBookmark], "unknown" )
+      IndisPure <- str_contains(completetable$ActualVals[ClusterBookmark], "cluster")
+      if(CalledUnknown== TRUE && IndisPure == TRUE){
+        completetable$Comparison[ClusterBookmark] <- "P Unknown"
+        numPUError <- numPUError + 1
+      }
+      
+      ClusterBookmark <- ClusterBookmark +1
+    }
+    
+    propPUError <- numPUError/length(completetable$Comparison)
+    return(propPUError)
+    
 
+}
 
+FindHUnknown <- function(completetable){
+  ClusterBookmark <- 1
+  numHUError <- 0
+  while(ClusterBookmark <= length(completetable$Cluster1)){
+    CalledUnknown <- str_contains(completetable$Decision[ClusterBookmark], "unknown" )
+    IndisHybrid <- str_contains(completetable$ActualVals[ClusterBookmark], "Hybrid")
+    if(CalledUnknown== TRUE && IndisHybrid == TRUE){
+      completetable$Comparison[ClusterBookmark] <- "H Unknown"
+      numHUError <- numHUError + 1
+    }
+    
+    ClusterBookmark <- ClusterBookmark +1
+  }
+  
+  propHUError <- numHUError/length(completetable$Comparison)
+  return(propHUError)
+  
+  
+}
 #Function calculating total proportion of successes, proportion of success for pure species, and proportion of success for hybrids
 #will not run properly if structure does not use the correct number of clusters
 ProportionOfSuccess <- function(finaltable,numberIndsPerSpecies,numerror){
@@ -432,16 +505,6 @@ maketable <- function(results, originallabels,numberIndsPerSpecies,percenterror)
 }
 
 
-
-
-
-
-
-
-
-
-
-
 #put this in a while function
 #creates array to store proportion of individuals in each run that have the merge error
 CreateMergeErrorArray <- function(ScenarioLoc){
@@ -464,7 +527,7 @@ CreateMergeErrorArray <- function(ScenarioLoc){
   
   
   dimensionsforArray <- c(NumArpFiles, NumStructOutFiles, length(ScenarioList))
-  ErrorArray <- array(dim=dimensionsforArray)
+  ErrorArray <- array(dim=dimensionsforArray, dimnames = list(ArpFilesInFSCOut, StructOutFiles, ScenarioList))
   
   
   
@@ -550,6 +613,111 @@ CreateMergeErrorArray <- function(ScenarioLoc){
   print(ErrorArray)
 }
 
+CreateP2HErrorArray <- function(ScenarioLoc){
+  ArrayBookmark <- 1
+  ScenarioList <- list.dirs(path = ,full.names = FALSE, 
+                            recursive = FALSE)
+  #x
+  basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
+  arpfilesloc <- paste0(basepath, "/ArpFiles" )
+  totalFilesInFSCOut <- list.files(path = arpfilesloc)
+  NumArpFiles <- length(ArpFilesInFSCOut)
+  
+  #y
+  structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
+  structOutFolders <- structOutFolders[-1]
+  structOutFolders <- structOutFolders[-1]
+  StructFolderX <- structOutFolders[ArrayBookmark] #calls singular OutFolder
+  StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
+  NumStructOutFiles <- length(StructOutFiles)
+  
+  
+  dimensionsforArray <- c(NumArpFiles, NumStructOutFiles, length(ScenarioList))
+  ErrorArray <- array(dim=dimensionsforArray, dimnames = list(ArpFilesInFSCOut, StructOutFiles, ScenarioList))
+  
+  
+  
+  while(ArrayBookmark <= length(ScenarioList)){
+    basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
+    arpfilesloc <- paste0(basepath, "/ArpFiles" )
+    
+    #finds the arp files to create labels
+    a <- 1
+    totalFilesInFSCOut <- list.files(path = arpfilesloc)
+    b <- 1
+    d <- 1
+    ArpFilesInFSCOut <- as.numeric(0)
+    totalFilesInFSCOut
+    
+    #only search for .arp files
+    while(b <= length(totalFilesInFSCOut)){
+      searchforarp <- str_contains(totalFilesInFSCOut[b], ".arp")
+      if(searchforarp == TRUE){
+        ArpFilesInFSCOut[d] <- totalFilesInFSCOut[b]
+        d <- d+1
+      }
+      
+      b <- b+1
+    }
+    ScenarioFolder <- paste0(ScenarioList[ArrayBookmark],"/")
+    NumArpFiles <- length(ArpFilesInFSCOut)
+    a <- 1
+    labelsList <- list()
+    #while a is less than or equal to the number of arp files, create labels for each file
+    while(a <= NumArpFiles){
+      arpfilename <- ArpFilesInFSCOut[a]
+      arpfilename = unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
+      FileWithoutArp <- unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
+      #make the structure file and store the original species groups
+      labelsList[[a]] <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder)
+      a<- a+1
+    }
+    
+    #input filename in ""
+    #lists directories is specified structure path
+    #Change path to ../ when arp file separate
+    structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
+    structOutFolders <- structOutFolders[-1]
+    structOutFolders <- structOutFolders[-1]
+    P2HErrorMatrix <- matrix()
+    Matrixbookmark <- 1
+    StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
+    StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
+    NumStructOutFiles <- length(StructOutFiles)
+    P2HErrorMatrix <- matrix(nrow = length(structOutFolders), ncol = NumStructOutFiles)
+    
+    while(Matrixbookmark <= length(structOutFolders)){
+      StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
+      StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
+      NumStructOutFiles <- length(StructOutFiles)
+      makeTablesCounter <- 1
+      propP2HError <- vector()
+      
+      
+      allTables <- vector(mode = "list", length = NumStructOutFiles) #creates initial object for all the tables for each run
+      
+      
+      #creates vector of proportion of error for each structure file in a run
+      while(makeTablesCounter <= length(StructOutFiles)){
+        demeQmat <- readQ(paste(basepath,"/", StructFolderX,"/",StructOutFiles[makeTablesCounter],sep = ""))  
+        
+        results <- demeQmat[[StructOutFiles[makeTablesCounter]]]
+        
+        percenterror <- 0
+        allTables[[makeTablesCounter]] <- maketable(results, labelsList[[1]], numberIndsPerSpecies, percenterror)
+        tempvect <- FindP2HError(allTables[[makeTablesCounter]])
+        propP2HError[makeTablesCounter] <- tempvect
+        makeTablesCounter <- makeTablesCounter+1
+      }
+      P2HErrorMatrix[Matrixbookmark,] <- propP2HError
+      Matrixbookmark <- Matrixbookmark + 1
+    }
+    
+    ErrorArray[,,ArrayBookmark] <- P2HErrorMatrix
+    ArrayBookmark <- ArrayBookmark +1
+  }
+  print(ErrorArray)
+}
 
 #Pipeline-----------------------------------------------------------------------
 
@@ -558,6 +726,9 @@ numberIndsPerSpecies <- 10
 setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/")
 ScenarioFolder <- "4Deme10ind/"
 StructOutLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/4Deme10ind/"
+CreateP2HErrorArray(ScenarioLoc)
+
+
 
 #Before Running Structure----
 ScenarioLoc <- getwd()
