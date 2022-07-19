@@ -420,9 +420,47 @@ maketable <- function(results, originallabels,numberIndsPerSpecies,percenterror)
   return(completetable)
 }
 
+
+
+
+
+
+
+
+
+
+
+
 #put this in a while function
 #creates array to store proportion of individuals in each run that have the merge error
-CreateMergeErrorArray <- function(arpFilesLoc, StructFilesLoc, num){
+CreateMergeErrorArray <- function(ScenarioLoc, arpFilesLoc, StructFilesLoc, num){
+  ArrayBookmark <- 1
+  ScenarioList <- list.dirs(path = ,full.names = FALSE, 
+                        recursive = FALSE)
+  #x
+  basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
+  arpfilesloc <- paste0(basepath, "/ArpFiles" )
+  totalFilesInFSCOut <- list.files(path = arpfilesloc)
+  NumArpFiles <- length(ArpFilesInFSCOut)
+  
+  #y
+  structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
+  structOutFolders <- structOutFolders[-1]
+  structOutFolders <- structOutFolders[-1]
+  StructFolderX <- structOutFolders[ArrayBookmark] #calls singular OutFolder
+  StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
+  NumStructOutFiles <- length(StructOutFiles)
+  
+  
+  dimensionsforArray <- c(NumArpFiles, NumStructOutFiles, length(ScenarioList))
+  ErrorArray <- array(dim=dimensionsforArray)
+  
+  
+  
+  while(ArrayBookmark <= length(ScenarioList)){
+  basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
+  arpfilesloc <- paste0(basepath, "/ArpFiles" )
+  
   #finds the arp files to create labels
   a <- 1
   totalFilesInFSCOut <- list.files(path = arpfilesloc)
@@ -456,23 +494,31 @@ CreateMergeErrorArray <- function(arpFilesLoc, StructFilesLoc, num){
 
   #input filename in ""
   #lists directories is specified structure path
-  structOutFolders <- list.dirs(path=)[-1]
+  #Change path to ../ when arp file separate
+  structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
   structOutFolders <- structOutFolders[-1]
-  bookmark <- 1
-  ErrorMatrix <- matrix()
-  while(bookmark <= length(structOutFolders)){
-  StructFolderX <- structOutFolders[bookmark]
-  StructOutFiles <- list.files(path = StructOutLoc)
+  structOutFolders <- structOutFolders[-1]
+  MergeErrorMatrix <- matrix()
+  Matrixbookmark <- 1
+  StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
+  StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
+  NumStructOutFiles <- length(StructOutFiles)
+  MergeErrorMatrix <- matrix(nrow = length(structOutFolders), ncol = NumStructOutFiles)
+  
+  while(Matrixbookmark <= length(structOutFolders)){
+  StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
+  StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
   NumStructOutFiles <- length(StructOutFiles)
   makeTablesCounter <- 1
   propMergeError <- vector()
-  #creates initial object for all the tables for each run
-  allTables <- vector(mode = "list", length = NumStructOutFiles)
-  bookmark <- bookmark + 1
-  }
+  
+ 
+  allTables <- vector(mode = "list", length = NumStructOutFiles) #creates initial object for all the tables for each run
+
+  
   #creates vector of proportion of error for each structure file in a run
   while(makeTablesCounter <= length(StructOutFiles)){
-    demeQmat <- readQ(paste(StructOutLoc,StructOutFiles[makeTablesCounter],sep = ""))  
+    demeQmat <- readQ(paste(basepath,"/", StructFolderX,"/",StructOutFiles[makeTablesCounter],sep = ""))  
     
     results <- demeQmat[[StructOutFiles[makeTablesCounter]]]
     
@@ -482,8 +528,13 @@ CreateMergeErrorArray <- function(arpFilesLoc, StructFilesLoc, num){
       propMergeError[makeTablesCounter] <- tempvect
       makeTablesCounter <- makeTablesCounter+1
   }
+  MergeErrorMatrix[Matrixbookmark,] <- propMergeError
+  Matrixbookmark <- Matrixbookmark + 1
+  }
   
-  
+  ErrorArray[,,ArrayBookmark] <- MergeErrorMatrix
+  ArrayBookmark <- ArrayBookmark +1
+}
 }
 
 
@@ -492,8 +543,9 @@ CreateMergeErrorArray <- function(arpFilesLoc, StructFilesLoc, num){
 numberIndsPerSpecies <- 10
 
 #set the working directory and list the file name
-setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/4Deme10ind/")
+setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/")
 setwd("/Users/CHendrikse/Documents/fsc26_win64/8Demes/")
+ScenarioLoc <- getwd()
 arpfilesloc <- getwd()
 arpFiles <- list.files(path = arpfilesloc)
 NumFiles <- length(list.files(path = ))-2
@@ -529,11 +581,10 @@ StructOutFolders <- allfolders[-1]
 StructOutFolders <- StructOutFolders[-1]
 StructFolderNum <- length(StructOutFolders)
 
-NumStructOutFiles <- length(list.files(path = "/Users/CHendrikse/Documents/HybridSimulation/Structure/Outputs/parentandhybrid8Deme_20220713/"))
 #total number of merge error/()
 PropMergeError <- MergeErrorNumVect/(length(labels))
 
-MergeErrorNumVect <- CreateMergeErrorArray(CompleteTable, arpfilesloc,StructOutLoc)
+MergeErrorNumVect <- CreateMergeErrorArray(ScenarioLoc, CompleteTable, arpfilesloc,StructOutLoc)
 
 #organize repo and come back
 getwd()
