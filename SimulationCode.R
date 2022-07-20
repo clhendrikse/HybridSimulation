@@ -47,14 +47,14 @@ makeStructure <- function(filename,a, numinds, ScenarioFolder){
 
   # filenameforstruct <- paste("parentandhybrid", a, sep="")
   filenameforstruct <- paste0("parentandhybrid", a, ".str")
-  genind2structure(final_genind, file= filenameforstruct, pops=TRUE)
+  genind2structure(final_genind, file= filenameforstruct, pops=FALSE)
   
   #return the labels for individuals in the order they are in the file
   return(actual_values)
 }
 
 #genind to structure file code (citation in my drive)
-genind2structure <- function(obj, file="", pops=TRUE){
+genind2structure <- function(obj, file="", pops=FALSE){
   if(!"genind" %in% class(obj)){
     warning("Function was designed for genind objects.")
   }
@@ -310,14 +310,6 @@ CompareQ <- function(tabletocompare, originalLabels, numberIndsPerSpecies){
   return(tabletocompare)
   }
 
-
-
-
-
-
-
-
-
 #Finds the proportion of times STRUCTURE incorrectly labeled individuals from two different species as the same
 #Note: if each species has 10 inds, but STRUCTURE labeled 20 inds in the same cluster, all 20 inds are labeled as incorrect
 FindMergeError <- function(tabletocompare){
@@ -453,38 +445,6 @@ FindHUnknownError <- function(completetable){
   
   
 }
-#Function calculating total proportion of successes, proportion of success for pure species, and proportion of success for hybrids
-#will not run properly if structure does not use the correct number of clusters
-ProportionOfSuccess <- function(finaltable,numberIndsPerSpecies,numerror){
-  
-  #finding the hybrid and pure individuals
-  hybridinds <- str_find(finaltable$ActualVals, "hybrid")
-  pureinds <- str_find(finaltable$ActualVals, "cluster")
-  
-  #finding the number of times the decision matches the actual cluster
-  numsuccess <- sum(finaltable$Comparison)
-  numhybridsuccess <- sum(finaltable$Comparison[hybridinds])
-  numpuresuccess <-sum(finaltable$Comparison[pureinds])
-  
-  #finding the proportion of success for hybrids, pure, and all
-  percentsuccess <- numsuccess/length(finaltable$Comparison)
-  percenthybridsuccess <- numhybridsuccess/length(hybridinds)
-  percentPureSuccess <- numpuresuccess/length(pureinds)
-  
-  #vectorizing the outputs
-  propsuccessvect <- paste("Total Proportion of Success: ", percentsuccess, sep = "")
-  propsuccesshybrid <- paste("Hybrid Proportion of Success: ", percenthybridsuccess, sep = "")
-  propsuccesspure <- paste("Pure Proportion of Success: ", percentPureSuccess, sep = "")
-  
-  #printing the results with a warning that the way structure runs may cause an inaccurate result
-  print(propsuccessvect)
-  print(propsuccesspure)
-  print(propsuccesshybrid)
-  warning("Correct values based on Structure")
-  
-
-
-}
 
 #master function to create the table and calculate proportion of success
 maketable <- function(results, originallabels,numberIndsPerSpecies,percenterror){
@@ -499,7 +459,6 @@ maketable <- function(results, originallabels,numberIndsPerSpecies,percenterror)
   #adding comparison (TRUE/FALSE) values and the original labels of the species they belong to
   completetable <- CompareQ(tabledecisions, labels, numberIndsPerSpecies)
   #prints the table
-  #prints the proportion of success for the pure species, the hybrids, and all species returns the number of times the error is recorded
   return(completetable)
 }
 
@@ -1266,7 +1225,6 @@ CreateCorrectPropArray <- function(ScenarioLoc){
 numberIndsPerSpecies <- 10
 setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/")
 ScenarioLoc <- getwd()
-ScenarioFolder <- "4Deme10ind/"
 StructOutLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/4Deme10ind/"
 CreateP2HErrorArray(ScenarioLoc)
 CreateH2PErrorArray(ScenarioLoc)
