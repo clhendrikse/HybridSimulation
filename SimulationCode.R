@@ -10,7 +10,6 @@ library(dplyr)
 #functions ---------------------------------------------------------------------
 # Function converting .arp file to a .gen file 
 makeStructure <- function(filename,a, numinds, ScenarioFolder){
-
   ArpFileLocation <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename, ".arp")
   #takes the file name and adds .arp so it can be found in the file\
   arp2gen(ArpFileLocation)
@@ -100,149 +99,19 @@ genind2structure <- function(obj, file="", pops=FALSE){
 
 #function that takes the Q values and creates a new column that labels STRUCTURE's decision changing the value in this function should allow the other functions to still run
 structuredecision <- function(obj){
-  
+  browser()
   #putting individuals in groups depending on what STRUCTURE decides (max is 10 clusters)
-  #pure
-  pure1 <- rownames(obj[which(obj$Cluster1 > 0.9),])  
-  pure2 <- rownames(obj[which(obj$Cluster2 > 0.9),])
-  pure3 <- rownames(obj[which(obj$Cluster3 > 0.9),])
-  pure4 <- rownames(obj[which(obj$Cluster4 > 0.9),])
-  pure5 <- rownames(obj[which(obj$Cluster5 > 0.9),])  
-  pure6 <- rownames(obj[which(obj$Cluster6 > 0.9),])
-  pure7 <- rownames(obj[which(obj$Cluster7 > 0.9),])
-  pure8 <- rownames(obj[which(obj$Cluster8 > 0.9),])
-  pure9 <- rownames(obj[which(obj$Cluster9 > 0.9),])
-  pure10 <- rownames(obj[which(obj$Cluster10 > 0.9),])
-  #hybrids
-  hybrids1 <- rownames(obj[which(obj$Cluster1 > 0.4 & obj$Cluster1 < .6),])
-  hybrids2 <- rownames(obj[which(obj$Cluster2 > 0.4 & obj$Cluster2 < .6),])
-  hybrids3 <- rownames(obj[which(obj$Cluster3 > 0.4 & obj$Cluster3 < .6),])
-  hybrids4 <- rownames(obj[which(obj$Cluster4 > 0.4 & obj$Cluster4 < .6),])
-  hybrids5 <- rownames(obj[which(obj$Cluster5 > 0.4 & obj$Cluster5 < .6),])
-  hybrids6 <- rownames(obj[which(obj$Cluster6 > 0.4 & obj$Cluster6 < .6),])
-  hybrids7 <- rownames(obj[which(obj$Cluster7 > 0.4 & obj$Cluster7 < .6),])
-  hybrids8 <- rownames(obj[which(obj$Cluster8 > 0.4 & obj$Cluster8 < .6),])
-  hybrids9 <- rownames(obj[which(obj$Cluster7 > 0.4 & obj$Cluster7 < .6),])
-  hybrids10 <- rownames(obj[which(obj$Cluster8 > 0.4 & obj$Cluster8 < .6),])
-  hybridinds <- c(hybrids1,hybrids2,hybrids3,hybrids4,hybrids5,hybrids6,hybrids7,hybrids8,hybrids9,hybrids10)
-  hybridinds <- unique(hybridinds)
-  guesses <- c(pure1, pure2, pure3, pure4, hybridinds, pure5, pure6, pure7, pure8, pure9, pure10)
-  #for 8 demes
-
-  #creating initial decisions object of what cluster structure decided the individual belongs to
-  v <- 1
-  decision <- as.numeric(0)
-  if(row.names(obj)[1] %in% pure1) {
-    decision <- "cluster1"
-    v <- v+1
-  }
-  if(row.names(obj)[1] %in% pure2) {
-    decision <- "cluster2"
-    v <- v+1
-  }
-  if(row.names(obj)[1] %in% pure3) {
-    decision <- "cluster3"
-    v <- v+1
-  }
-  if(row.names(obj)[1] %in% pure4) {
-    decision <- "cluster4"
-    v <- v+1
-  }
-  if(row.names(obj)[1] %in% pure5) {
-    decision <- "cluster5"
-    v <- v+1
-  }
-  if(row.names(obj)[1] %in% pure6) {
-    decision <- "cluster6"
-    v <- v+1
-  }
-  if(row.names(obj)[1] %in% pure7) {
-    decision <- "cluster7"
-    v <- v+1
-  }
-  if(row.names(obj)[1] %in% pure8) {
-    decision <- "cluster8"
-    v <- v+1
-  }
-  if(row.names(obj)[1] %in% pure9) {
-    decision <- "cluster9"
-    v <- v+1
-  }
-  if(row.names(obj)[1] %in% pure10) {
-    decision <- "cluster10"
-    v <- v+1
-  }
-  if(row.names(obj)[1] %in% hybridinds) {
-    decision <- "hybrid"
-    v <- v+1
-  }
-  if(row.names(obj)[1] %nin% guesses) {
-    decision <- "unknown"
-    v <- v+1
-  }
-  
-
-  #while loop to add in the entire string of decisions of what cluster STRUCTURE grouped them in
-  while(v <= length(obj$Cluster1)){
-    if(row.names(obj)[v] %in% pure1) {
-      decision <- c(decision, "cluster1")
-      
-    }
-    if(row.names(obj)[v] %in% pure2) {
-      decision <- c(decision,"cluster2")
-      
-    }
-    if(row.names(obj)[v] %in% pure3) {
-      decision <- c(decision,"cluster3")
- 
-    }
-    if(row.names(obj)[v] %in% pure4) {
-      decision <- c(decision,"cluster4")
-
-    }
-    if(row.names(obj)[v] %in% pure5) {
-      decision <- c(decision,"cluster5")
-
-    }
-    if(row.names(obj)[v] %in% pure6) {
-      decision <- c(decision,"cluster6")
-
-    }
-    if(row.names(obj)[v] %in% pure7) {
-      decision <- c(decision,"cluster7")
+  obj$Decision<-0 #declare a new column, to hold Decisions
+  for (i in 1:nrow(obj)){ #for all rows e.g. all individuals
+    #first check if the individual is a pure species (>0.9) and if yes, assign it to the cluster for the column number which is >0.9
+    if (any(obj[i,]>0.9)) obj$Decision[i]<-paste0("Cluster",(which(obj[i,]>0.9)))
+    #check if its called as a hybrid
+    if(any(obj[i,]>0.4 & obj[i,]<0.6)) obj$Decision[i]<-paste0("hybrid",(which(obj[i,]>0.4 & obj[i,]<0.6)))
+    #Otherwise, e.g. it didn't get called a parent cluster or hybrid, call it unknown
+    if(obj$Decision[i]==0)  obj$Decision[i]<-"unknown"
     
-      
-    }
-    if(row.names(obj)[v] %in% pure8) {
-      decision <- c(decision,"cluster8")
-
-    }
-    if(row.names(obj)[v] %in% pure9) {
-      decision <- c(decision,"cluster9")
-
-    }
-    if(row.names(obj)[v] %in% pure10) {
-      decision <- c(decision,"cluster10")
-
-    }
-    if(row.names(obj)[v] %in% hybridinds) {
-      decision <- c(decision,"hybrid")
- 
-    }
-    if(row.names(obj)[v] %nin% guesses) {
-      decision <- c(decision, "unknown")
-
-    }
-    v <- v+1
   }
-  
-  #adding in the Decision column
-  obj$Decision <- decision
-  
-  #saving entire table into new object and returning it
-  tablewithdecision <- obj
-  return(tablewithdecision)
-  
+  return(obj)
 }
 
 #function adding all true values
@@ -446,6 +315,25 @@ FindHUnknownError <- function(completetable){
   
 }
 
+FindErrors <- function(table, errortype){
+  if(errortype == "Merge"){
+    propError <- FindMergeError(table)
+  }
+  if(errortype == "P2H"){
+    propError <- FindP2HError(table)
+  }
+  if(errortype == "H2P"){
+    propError <- FindH2PError(table)
+  }
+  if(errortype == "PUnknown" || errortype == "P Unknown"){
+    propError <- FindPUnknownError(table)
+  }
+  if(errortype == "HUnknown" || errortype == "H Unknown"){
+    propError <- FindHUnknownError(table)
+  }
+  
+}
+
 #master function to create the table and calculate proportion of success
 maketable <- function(results, originallabels,numberIndsPerSpecies,percenterror){
   #after genind2Structure
@@ -593,8 +481,9 @@ CreateMergeErrorArray <- function(ScenarioLoc){
 }
 
 CreateP2HErrorArray <- function(ScenarioLoc){
+
   ArrayBookmark <- 1
-  ScenarioList <- list.dirs(path = ,full.names = FALSE, 
+  ScenarioList <- list.dirs(path = ScenarioLoc,full.names = FALSE, 
                             recursive = FALSE)
   #x
   basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
@@ -1089,6 +978,138 @@ CreateHUnknownErrorArray <- function(ScenarioLoc){
   print(ErrorArray)
 }
 
+
+
+
+#Ideally, this function will be used instead of the other array functions by using FindErrors() to decide which FindXError() function to use
+CreateErrorArray <- function(ScenarioLoc, errortype){
+  #while loop to make multiple matrices into an array
+  ArrayBookmark <- 1
+  #Finds number of scenarios saved in wd for z value in the array
+  ScenarioList <- list.dirs(path = ,full.names = FALSE, 
+                            recursive = FALSE)
+  #number of x slots in the array
+  basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
+  arpfilesloc <- paste0(basepath, "/ArpFiles" )
+  totalFilesInFSCOut <- list.files(path = arpfilesloc)
+  listArpFiles <- vector() #finds all files in the Arp folder
+  arpFiles <- list.files(path = arpfilesloc)
+  arpFileBookmark <- 1
+  NumtotalArpFiles <- length(arpFiles)
+  #list of all the arp files
+  while(arpFileBookmark <= NumtotalArpFiles ){
+    if(str_contains(arpFiles[arpFileBookmark], ".arp") == TRUE){
+      listArpFiles <- c(listArpFiles, arpFiles[arpFileBookmark]) 
+    }
+    arpFileBookmark <- arpFileBookmark +1
+  }
+  NumArpFiles <- length(listArpFiles) #counts how many arp files are in the folder
+  
+  
+  
+  #number of y slots in the array
+  structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
+  structOutFolders <- structOutFolders[-1]
+  structOutFolders <- structOutFolders[-1]
+  StructFolderX <- structOutFolders[ArrayBookmark] #calls singular OutFolder
+  StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
+  NumStructOutFiles <- length(StructOutFiles)
+  arpnums <- vector()
+  arpnumsbookmark <- 1
+  while(arpnumsbookmark <= length(listArpFiles)){
+    arpnums <- c(arpnums, arpnumsbookmark)
+    arpnumsbookmark <- arpnumsbookmark +1
+  }
+  
+  #creates initial array with the numbers found above
+  dimensionsforArray <- c(NumArpFiles, NumStructOutFiles, length(ScenarioList))
+  ErrorArray <- array(dim=dimensionsforArray, dimnames = list(arpnums, StructOutFiles, ScenarioList))
+  
+  
+  #while loop for the array
+  while(ArrayBookmark <= length(ScenarioList)){
+    basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
+    arpfilesloc <- paste0(basepath, "/ArpFiles" )
+    
+    #finds the arp files to create labels
+    a <- 1
+    totalFilesInFSCOut <- list.files(path = arpfilesloc)
+    b <- 1
+    d <- 1
+    ArpFilesInFSCOut <- as.numeric(0)
+    totalFilesInFSCOut
+    
+    #only search for .arp files
+    while(b <= length(totalFilesInFSCOut)){
+      searchforarp <- str_contains(totalFilesInFSCOut[b], ".arp")
+      if(searchforarp == TRUE){
+        ArpFilesInFSCOut[d] <- totalFilesInFSCOut[b]
+        d <- d+1
+      }
+      
+      b <- b+1
+    }
+    ScenarioFolder <- paste0(ScenarioList[ArrayBookmark],"/")
+    NumArpFiles <- length(ArpFilesInFSCOut)
+    a <- 1
+    labelsList <- list()
+    #while a is less than or equal to the number of arp files, create labels for each file
+    while(a <= NumArpFiles){
+      arpfilename <- ArpFilesInFSCOut[a]
+      arpfilename = unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
+      FileWithoutArp <- unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
+      #make the structure file and store the original species groups
+      labelsList[[a]] <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder)
+      a<- a+1
+    }
+    
+    #input filename in ""
+    #lists directories is specified structure path
+    #Change path to ../ when arp file separate
+    structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
+    structOutFolders <- structOutFolders[-1]
+    structOutFolders <- structOutFolders[-1]
+    ErrorMatrix <- matrix()
+    Matrixbookmark <- 1
+    StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
+    StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
+    NumStructOutFiles <- length(StructOutFiles)
+    ErrorMatrix <- matrix(nrow = length(structOutFolders), ncol = NumStructOutFiles)
+    
+    while(Matrixbookmark <= length(structOutFolders)){
+      StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
+      StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
+      NumStructOutFiles <- length(StructOutFiles)
+      makeTablesCounter <- 1
+      propError <- vector()
+      
+      
+      allTables <- vector(mode = "list", length = NumStructOutFiles) #creates initial object for all the tables for each run
+      
+      
+      #creates vector of proportion of error for each structure file in a run
+      while(makeTablesCounter <= length(StructOutFiles)){
+        demeQmat <- readQ(paste(basepath,"/", StructFolderX,"/",StructOutFiles[makeTablesCounter],sep = ""))  
+        
+        results <- demeQmat[[StructOutFiles[makeTablesCounter]]]
+        
+        percenterror <- 0
+        allTables[[makeTablesCounter]] <- maketable(results, labelsList[[1]], numberIndsPerSpecies, percenterror)
+        tempvect <- FindErrors(allTables[[makeTablesCounter]], errortype)
+        propMergeError[makeTablesCounter] <- tempvect
+        makeTablesCounter <- makeTablesCounter+1
+      }
+      ErrorMatrix[Matrixbookmark,] <- propError
+      Matrixbookmark <- Matrixbookmark + 1
+    }
+    
+    ErrorArray[,,ArrayBookmark] <- ErrorMatrix
+    ArrayBookmark <- ArrayBookmark +1
+  }
+  print(ErrorArray)
+}
+
+
 CreateCorrectPropArray <- function(ScenarioLoc){
   ArrayBookmark <- 1
   ScenarioList <- list.dirs(path = ,full.names = FALSE, 
@@ -1202,10 +1223,10 @@ CreateCorrectPropArray <- function(ScenarioLoc){
         
         propHunknown <- FindHUnknownError(allTables[[makeTablesCounter]])
         propPUnknown <- FindPUnknownError(allTables[[makeTablesCounter]])
-        propMergeErrror <- FindMergeError(allTables[[makeTablesCounter]])
+        propErrror <- FindError(allTables[[makeTablesCounter]])
         propP2H <- FindP2HError(allTables[[makeTablesCounter]])
         propH2P <- FindH2PError(allTables[[makeTablesCounter]])
-        tempvect <- 1 - propHunknown - propPUnknown - propMergeErrror - propP2H - propH2P
+        tempvect <- 1 - propHunknown - propPUnknown - propErrror - propP2H - propH2P
         
         propCorrectPropError[makeTablesCounter] <- tempvect
         makeTablesCounter <- makeTablesCounter+1
@@ -1225,36 +1246,52 @@ CreateCorrectPropArray <- function(ScenarioLoc){
 numberIndsPerSpecies <- 10
 setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/")
 ScenarioLoc <- getwd()
-StructOutLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/4Deme10ind/"
+StructOutLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/"
 CreateP2HErrorArray(ScenarioLoc)
 CreateH2PErrorArray(ScenarioLoc)
 CreatePUnknownErrorArray(ScenarioLoc)
 CreateHUnknownErrorArray(ScenarioLoc)
 CreateCorrectPropArray(ScenarioLoc)
+CreateErrorArray("Merge")
 
-#Before Running Structure----
 
-arpfilesloc <- getwd()
-listArpFiles <- vector()
-arpFiles <- list.files(path = arpfilesloc)
-arpFileBookmark <- 1
-NumtotalArpFiles <- length(arpFiles)
-
-while(arpFileBookmark <= NumtotalArpFiles ){
-  if(str_contains(arpFiles[arpFileBookmark], ".arp") == TRUE){
-    listArpFiles <- c(listArpFiles, arpFiles[arpFileBookmark]) 
+#Before running structure ----
+  ScenarioList <- list.dirs(path = , full.names = FALSE, recursive = FALSE)
+  basepath <- paste0(ScenarioLoc,"/", ScenarioList[1])
+  arpfilesloc <- paste0(basepath, "/ArpFiles" )
+  
+  #finds the arp files to create labels
+  a <- 1
+  totalFilesInFSCOut <- list.files(path = arpfilesloc)
+  b <- 1
+  d <- 1
+  ArpFilesInFSCOut <- as.numeric(0)
+  totalFilesInFSCOut
+  
+  #only search for .arp files
+  while(b <= length(totalFilesInFSCOut)){
+    searchforarp <- str_contains(totalFilesInFSCOut[b], ".arp")
+    if(searchforarp == TRUE){
+      ArpFilesInFSCOut[d] <- totalFilesInFSCOut[b]
+      d <- d+1
+    }
+    
+    b <- b+1
   }
-  arpFileBookmark <- arpFileBookmark +1
-}
-a <- 1
-arpfilename <- as.numeric(0)
-while(a <= length(listArpFiles)){
-  arpfilename<- paste("4DemeFixed_1_", a, sep = "") #without .arp
-filename <- arpfilename
-#make the structure file and store the original species groups
-labels <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder)
-a<- a+1
-}
+  ScenarioFolder <- paste0(ScenarioList[1],"/")
+  NumArpFiles <- length(ArpFilesInFSCOut)
+  a <- 1
+  labelsList <- list()
+  #while a is less than or equal to the number of arp files, create labels for each file
+  while(a <= NumArpFiles){
+    arpfilename <- ArpFilesInFSCOut[a]
+    arpfilename <- unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
+    #make the structure file and store the original species groups
+    labelsList[[a]] <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder)
+    a<- a+1
+  }
+  
+
 
 
 
