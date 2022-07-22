@@ -99,7 +99,6 @@ genind2structure <- function(obj, file="", pops=FALSE){
 
 #function that takes the Q values and creates a new column that labels STRUCTURE's decision changing the value in this function should allow the other functions to still run
 structuredecision <- function(obj){
-  browser()
   #putting individuals in groups depending on what STRUCTURE decides (max is 10 clusters)
   obj$Decision<-0 #declare a new column, to hold Decisions
   for (i in 1:nrow(obj)){ #for all rows e.g. all individuals
@@ -172,10 +171,13 @@ CompareQ <- function(tabletocompare, originalLabels, numberIndsPerSpecies){
       comparison <- c(comparison, FALSE)
       bookmark <- bookmark + 1
     }
+    
+
   }
   
   #adding comparison to new column in the table
   tabletocompare$Comparison <- comparison
+  tabletocompare$Original <- originalLabels
   return(tabletocompare)
   }
 
@@ -237,12 +239,14 @@ FindMergeError <- function(tabletocompare){
 
 }
 
+#Finds the P2H error by looking at if the 
 FindP2HError <- function(completetable){
+  browser()
 ClusterBookmark <- 1
 numP2HError <- 0
 while(ClusterBookmark <= length(completetable$Cluster1)){
   Calledhybrid <- str_contains(completetable$Decision[ClusterBookmark], "hybrid" )
-  IndisHybrid <- str_contains(completetable$ActualVals[ClusterBookmark], "hybrid")
+  IndisHybrid <- str_contains(completetable$Original[ClusterBookmark], "hybrid")
   if(Calledhybrid == TRUE && IndisHybrid == FALSE){
     completetable$Comparison[ClusterBookmark] <- "P2H"
     numP2HError <- numP2HError + 1
@@ -261,7 +265,7 @@ FindH2PError <- function(completetable){
   numH2PError <- 0
   while(ClusterBookmark <= length(completetable$Cluster1)){
     Calledhybrid <- str_contains(completetable$Decision[ClusterBookmark], "hybrid" )
-    IndisHybrid <- str_contains(completetable$ActualVals[ClusterBookmark], "hybrid")
+    IndisHybrid <- str_contains(completetable$Original[ClusterBookmark], "hybrid")
     if(Calledhybrid == FALSE && IndisHybrid == TRUE){
       completetable$Comparison[ClusterBookmark] <- "H2P"
       numH2PError <- numP2HError + 1
@@ -280,7 +284,7 @@ FindPUnknownError <- function(completetable){
     numPUError <- 0
     while(ClusterBookmark <= length(completetable$Cluster1)){
       CalledUnknown <- str_contains(completetable$Decision[ClusterBookmark], "unknown" )
-      IndisPure <- str_contains(completetable$ActualVals[ClusterBookmark], "cluster")
+      IndisPure <- str_contains(completetable$Original[ClusterBookmark], "pop")
       if(CalledUnknown== TRUE && IndisPure == TRUE){
         completetable$Comparison[ClusterBookmark] <- "P Unknown"
         numPUError <- numPUError + 1
@@ -300,7 +304,7 @@ FindHUnknownError <- function(completetable){
   numHUError <- 0
   while(ClusterBookmark <= length(completetable$Cluster1)){
     CalledUnknown <- str_contains(completetable$Decision[ClusterBookmark], "unknown" )
-    IndisHybrid <- str_contains(completetable$ActualVals[ClusterBookmark], "Hybrid")
+    IndisHybrid <- str_contains(completetable$Original[ClusterBookmark], "Hybrid")
     if(CalledUnknown== TRUE && IndisHybrid == TRUE){
       completetable$Comparison[ClusterBookmark] <- "H Unknown"
       numHUError <- numHUError + 1
@@ -315,6 +319,7 @@ FindHUnknownError <- function(completetable){
   
 }
 
+#Calls the FindError functions to find proportion of error depending on what error type is specified
 FindErrors <- function(table, errortype){
   if(errortype == "Merge"){
     propError <- FindMergeError(table)
@@ -345,15 +350,14 @@ maketable <- function(results, originallabels,numberIndsPerSpecies,percenterror)
   #adding the true clusters
   tabledecisions <- AddingTrueGroup(tabledecisions)
   #adding comparison (TRUE/FALSE) values and the original labels of the species they belong to
-  completetable <- CompareQ(tabledecisions, labels, numberIndsPerSpecies)
+  completetable <- CompareQ(tabledecisions, originallabels, numberIndsPerSpecies)
   #prints the table
   return(completetable)
 }
 
-
-#put this in a while function
-#creates array to store proportion of individuals in each run that have the merge error
-CreateMergeErrorArray <- function(ScenarioLoc){
+#Ideally, this function will be used instead of the other array functions by using FindErrors() to decide which FindXError() function to use
+CreateErrorArray <- function(ScenarioLoc, errortype){
+  browser()
   #while loop to make multiple matrices into an array
   ArrayBookmark <- 1
   #Finds number of scenarios saved in wd for z value in the array
@@ -380,8 +384,7 @@ CreateMergeErrorArray <- function(ScenarioLoc){
   
   #number of y slots in the array
   structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
-  structOutFolders <- structOutFolders[-1]
-  structOutFolders <- structOutFolders[-1]
+  structOutFolders <- structOutFolders[-c(1,2)]
   StructFolderX <- structOutFolders[ArrayBookmark] #calls singular OutFolder
   StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
   NumStructOutFiles <- length(StructOutFiles)
@@ -438,21 +441,21 @@ CreateMergeErrorArray <- function(ScenarioLoc){
     #lists directories is specified structure path
     #Change path to ../ when arp file separate
     structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
-    structOutFolders <- structOutFolders[-1]
-    structOutFolders <- structOutFolders[-1]
-    MergeErrorMatrix <- matrix()
+    structOutFolders <- structOutFolders[-c(1,2)]
+    ErrorMatrix <- matrix()
     Matrixbookmark <- 1
     StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
     StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
     NumStructOutFiles <- length(StructOutFiles)
-    MergeErrorMatrix <- matrix(nrow = length(structOutFolders), ncol = NumStructOutFiles)
+    ErrorMatrix <- matrix(nrow = length(structOutFolders), ncol = NumStructOutFiles)
     
     while(Matrixbookmark <= length(structOutFolders)){
       StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
       StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
       NumStructOutFiles <- length(StructOutFiles)
       makeTablesCounter <- 1
-      propMergeError <- vector()
+      propError <- vector()
+      demeQmat <- readQ(paste(basepath,"/", StructFolderX,"/",StructOutFiles[makeTablesCounter],sep = ""))  
       
       
       allTables <- vector(mode = "list", length = NumStructOutFiles) #creates initial object for all the tables for each run
@@ -466,24 +469,23 @@ CreateMergeErrorArray <- function(ScenarioLoc){
         
         percenterror <- 0
         allTables[[makeTablesCounter]] <- maketable(results, labelsList[[1]], numberIndsPerSpecies, percenterror)
-        tempvect <- FindMergeError(allTables[[makeTablesCounter]])
+        tempvect <- FindErrors(allTables[[makeTablesCounter]], errortype)
         propMergeError[makeTablesCounter] <- tempvect
         makeTablesCounter <- makeTablesCounter+1
       }
-      MergeErrorMatrix[Matrixbookmark,] <- propMergeError
+      ErrorMatrix[Matrixbookmark,] <- propError
       Matrixbookmark <- Matrixbookmark + 1
     }
     
-    ErrorArray[,,ArrayBookmark] <- MergeErrorMatrix
+    ErrorArray[,,ArrayBookmark] <- ErrorMatrix
     ArrayBookmark <- ArrayBookmark +1
   }
   print(ErrorArray)
 }
 
-CreateP2HErrorArray <- function(ScenarioLoc){
-
+CreateCorrectPropArray <- function(ScenarioLoc){
   ArrayBookmark <- 1
-  ScenarioList <- list.dirs(path = ScenarioLoc,full.names = FALSE, 
+  ScenarioList <- list.dirs(path = ,full.names = FALSE, 
                             recursive = FALSE)
   #x
   basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
@@ -506,8 +508,7 @@ CreateP2HErrorArray <- function(ScenarioLoc){
   
   #y
   structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
-  structOutFolders <- structOutFolders[-1]
-  structOutFolders <- structOutFolders[-1]
+  structOutFolders <- structOutFolders[-c(1,2)]
   StructFolderX <- structOutFolders[ArrayBookmark] #calls singular OutFolder
   StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
   NumStructOutFiles <- length(StructOutFiles)
@@ -521,7 +522,6 @@ CreateP2HErrorArray <- function(ScenarioLoc){
   dimensionsforArray <- c(NumArpFiles, NumStructOutFiles, length(ScenarioList))
   ErrorArray <- array(dim=dimensionsforArray, dimnames = list(arpnums, StructOutFiles, ScenarioList))
   
-
   
   
   while(ArrayBookmark <= length(ScenarioList)){
@@ -564,8 +564,268 @@ CreateP2HErrorArray <- function(ScenarioLoc){
     #lists directories is specified structure path
     #Change path to ../ when arp file separate
     structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
-    structOutFolders <- structOutFolders[-1]
-    structOutFolders <- structOutFolders[-1]
+    structOutFolders <- structOutFolders[-c(1,2)]
+    CorrectPropErrorMatrix <- matrix()
+    Matrixbookmark <- 1
+    StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
+    StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
+    NumStructOutFiles <- length(StructOutFiles)
+    CorrectPropErrorMatrix <- matrix(nrow = length(structOutFolders), ncol = NumStructOutFiles)
+    
+    while(Matrixbookmark <= length(structOutFolders)){
+      StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
+      StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
+      NumStructOutFiles <- length(StructOutFiles)
+      makeTablesCounter <- 1
+      propCorrectPropError <- vector()
+      
+      
+      allTables <- vector(mode = "list", length = NumStructOutFiles) #creates initial object for all the tables for each run
+    
+      
+      #creates vector of proportion of error for each structure file in a run
+      while(makeTablesCounter <= length(StructOutFiles)){
+        demeQmat <- readQ(paste(basepath,"/", StructFolderX,"/",StructOutFiles[makeTablesCounter],sep = ""))  
+        
+        results <- demeQmat[[StructOutFiles[makeTablesCounter]]]
+        
+        percenterror <- 0
+        allTables[[makeTablesCounter]] <- maketable(results, labelsList[[1]], numberIndsPerSpecies, percenterror)
+        
+        propHunknown <- FindHUnknownError(allTables[[makeTablesCounter]])
+        propPUnknown <- FindPUnknownError(allTables[[makeTablesCounter]])
+        propErrror <- FindError(allTables[[makeTablesCounter]])
+        propP2H <- FindP2HError(allTables[[makeTablesCounter]])
+        propH2P <- FindH2PError(allTables[[makeTablesCounter]])
+        tempvect <- 1 - propHunknown - propPUnknown - propErrror - propP2H - propH2P
+        
+        propCorrectPropError[makeTablesCounter] <- tempvect
+        makeTablesCounter <- makeTablesCounter+1
+      }
+      CorrectPropErrorMatrix[Matrixbookmark,] <- propCorrectPropError
+      Matrixbookmark <- Matrixbookmark + 1
+    }
+    
+    ErrorArray[,,ArrayBookmark] <- CorrectPropErrorMatrix
+    ArrayBookmark <- ArrayBookmark +1
+  }
+  print(ErrorArray)
+}
+
+
+#Archived functions - saved just in case the CreateErrorArray function doesn't work how it should ----
+#put this in a while function
+#creates array to store proportion of individuals in each run that have the merge error
+CreateMergeErrorArray <- function(ScenarioLoc){
+  #while loop to make multiple matrices into an array
+  ArrayBookmark <- 1
+  #Finds number of scenarios saved in wd for z value in the array
+  ScenarioList <- list.dirs(path = ,full.names = FALSE, 
+                            recursive = FALSE)
+  #number of x slots in the array
+  basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
+  arpfilesloc <- paste0(basepath, "/ArpFiles" )
+  totalFilesInFSCOut <- list.files(path = arpfilesloc)
+  listArpFiles <- vector() #finds all files in the Arp folder
+  arpFiles <- list.files(path = arpfilesloc)
+  arpFileBookmark <- 1
+  NumtotalArpFiles <- length(arpFiles)
+  #list of all the arp files
+  while(arpFileBookmark <= NumtotalArpFiles ){
+    if(str_contains(arpFiles[arpFileBookmark], ".arp") == TRUE){
+      listArpFiles <- c(listArpFiles, arpFiles[arpFileBookmark]) 
+    }
+    arpFileBookmark <- arpFileBookmark +1
+  }
+  NumArpFiles <- length(listArpFiles) #counts how many arp files are in the folder
+  
+  
+  
+  #number of y slots in the array
+  structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
+  structOutFolders <- structOutFolders[-c(1,2)]
+  StructFolderX <- structOutFolders[ArrayBookmark] #calls singular OutFolder
+  StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
+  NumStructOutFiles <- length(StructOutFiles)
+  arpnums <- vector()
+  arpnumsbookmark <- 1
+  while(arpnumsbookmark <= length(listArpFiles)){
+    arpnums <- c(arpnums, arpnumsbookmark)
+    arpnumsbookmark <- arpnumsbookmark +1
+  }
+  
+  #creates initial array with the numbers found above
+  dimensionsforArray <- c(NumArpFiles, NumStructOutFiles, length(ScenarioList))
+  ErrorArray <- array(dim=dimensionsforArray, dimnames = list(arpnums, StructOutFiles, ScenarioList))
+  
+  
+  #while loop for the array
+  while(ArrayBookmark <= length(ScenarioList)){
+    basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
+    arpfilesloc <- paste0(basepath, "/ArpFiles" )
+    
+    #finds the arp files to create labels
+    a <- 1
+    totalFilesInFSCOut <- list.files(path = arpfilesloc)
+    b <- 1
+    d <- 1
+    ArpFilesInFSCOut <- as.numeric(0)
+    totalFilesInFSCOut
+    
+    #only search for .arp files
+    while(b <= length(totalFilesInFSCOut)){
+      searchforarp <- str_contains(totalFilesInFSCOut[b], ".arp")
+      if(searchforarp == TRUE){
+        ArpFilesInFSCOut[d] <- totalFilesInFSCOut[b]
+        d <- d+1
+      }
+      
+      b <- b+1
+    }
+    ScenarioFolder <- paste0(ScenarioList[ArrayBookmark],"/")
+    NumArpFiles <- length(ArpFilesInFSCOut)
+    a <- 1
+    labelsList <- list()
+    #while a is less than or equal to the number of arp files, create labels for each file
+    while(a <= NumArpFiles){
+      arpfilename <- ArpFilesInFSCOut[a]
+      arpfilename = unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
+      FileWithoutArp <- unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
+      #make the structure file and store the original species groups
+      labelsList[[a]] <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder)
+      a<- a+1
+    }
+    
+    #input filename in ""
+    #lists directories is specified structure path
+    #Change path to ../ when arp file separate
+    structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
+    structOutFolders <- structOutFolders[-c(1,2)]
+    
+    MergeErrorMatrix <- matrix()
+    Matrixbookmark <- 1
+    StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
+    StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
+    NumStructOutFiles <- length(StructOutFiles)
+    MergeErrorMatrix <- matrix(nrow = length(structOutFolders), ncol = NumStructOutFiles)
+    
+    while(Matrixbookmark <= length(structOutFolders)){
+      StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
+      StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
+      NumStructOutFiles <- length(StructOutFiles)
+      makeTablesCounter <- 1
+      propMergeError <- vector()
+      
+      
+      allTables <- vector(mode = "list", length = NumStructOutFiles) #creates initial object for all the tables for each run
+      
+      
+      #creates vector of proportion of error for each structure file in a run
+      while(makeTablesCounter <= length(StructOutFiles)){
+        demeQmat <- readQ(paste(basepath,"/", StructFolderX,"/",StructOutFiles[makeTablesCounter],sep = ""))  
+        
+        results <- demeQmat[[StructOutFiles[makeTablesCounter]]]
+        
+        percenterror <- 0
+        allTables[[makeTablesCounter]] <- maketable(results, labelsList[[1]], numberIndsPerSpecies, percenterror)
+        tempvect <- FindMergeError(allTables[[makeTablesCounter]])
+        propMergeError[makeTablesCounter] <- tempvect
+        makeTablesCounter <- makeTablesCounter+1
+      }
+      MergeErrorMatrix[Matrixbookmark,] <- propMergeError
+      Matrixbookmark <- Matrixbookmark + 1
+    }
+    
+    ErrorArray[,,ArrayBookmark] <- MergeErrorMatrix
+    ArrayBookmark <- ArrayBookmark +1
+  }
+  print(ErrorArray)
+}
+
+CreateP2HErrorArray <- function(ScenarioLoc){
+  
+  ArrayBookmark <- 1
+  ScenarioList <- list.dirs(path = ScenarioLoc,full.names = FALSE, 
+                            recursive = FALSE)
+  #x
+  basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
+  arpfilesloc <- paste0(basepath, "/ArpFiles" )
+  totalFilesInFSCOut <- list.files(path = arpfilesloc)
+  listArpFiles <- vector()
+  arpFiles <- list.files(path = arpfilesloc)
+  arpFileBookmark <- 1
+  NumtotalArpFiles <- length(arpFiles)
+  
+  while(arpFileBookmark <= NumtotalArpFiles ){
+    if(str_contains(arpFiles[arpFileBookmark], ".arp") == TRUE){
+      listArpFiles <- c(listArpFiles, arpFiles[arpFileBookmark]) 
+    }
+    arpFileBookmark <- arpFileBookmark +1
+  }
+  NumArpFiles <- length(listArpFiles)
+  
+  
+  
+  #y
+  structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
+  structOutFolders <- structOutFolders[-c(1,2)]
+  StructFolderX <- structOutFolders[ArrayBookmark] #calls singular OutFolder
+  StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
+  NumStructOutFiles <- length(StructOutFiles)
+  arpnums <- vector()
+  arpnumsbookmark <- 1
+  while(arpnumsbookmark <= length(listArpFiles)){
+    arpnums <- c(arpnums, arpnumsbookmark)
+    arpnumsbookmark <- arpnumsbookmark +1
+  }
+  
+  dimensionsforArray <- c(NumArpFiles, NumStructOutFiles, length(ScenarioList))
+  ErrorArray <- array(dim=dimensionsforArray, dimnames = list(arpnums, StructOutFiles, ScenarioList))
+  
+  
+  
+  
+  while(ArrayBookmark <= length(ScenarioList)){
+    basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
+    arpfilesloc <- paste0(basepath, "/ArpFiles" )
+    
+    #finds the arp files to create labels
+    a <- 1
+    totalFilesInFSCOut <- list.files(path = arpfilesloc)
+    b <- 1
+    d <- 1
+    ArpFilesInFSCOut <- as.numeric(0)
+    totalFilesInFSCOut
+    
+    #only search for .arp files
+    while(b <= length(totalFilesInFSCOut)){
+      searchforarp <- str_contains(totalFilesInFSCOut[b], ".arp")
+      if(searchforarp == TRUE){
+        ArpFilesInFSCOut[d] <- totalFilesInFSCOut[b]
+        d <- d+1
+      }
+      
+      b <- b+1
+    }
+    ScenarioFolder <- paste0(ScenarioList[ArrayBookmark],"/")
+    NumArpFiles <- length(ArpFilesInFSCOut)
+    a <- 1
+    labelsList <- list()
+    #while a is less than or equal to the number of arp files, create labels for each file
+    while(a <= NumArpFiles){
+      arpfilename <- ArpFilesInFSCOut[a]
+      arpfilename = unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
+      FileWithoutArp <- unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
+      #make the structure file and store the original species groups
+      labelsList[[a]] <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder)
+      a<- a+1
+    }
+    
+    #input filename in ""
+    #lists directories is specified structure path
+    #Change path to ../ when arp file separate
+    structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
+    structOutFolders <- structOutFolders[-c(1,2)]
     P2HErrorMatrix <- matrix()
     Matrixbookmark <- 1
     StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
@@ -631,8 +891,7 @@ CreateH2PErrorArray <- function(ScenarioLoc){
   
   #y
   structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
-  structOutFolders <- structOutFolders[-1]
-  structOutFolders <- structOutFolders[-1]
+  structOutFolders <- structOutFolders[-c(1,2)]
   StructFolderX <- structOutFolders[ArrayBookmark] #calls singular OutFolder
   StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
   NumStructOutFiles <- length(StructOutFiles)
@@ -645,7 +904,7 @@ CreateH2PErrorArray <- function(ScenarioLoc){
   
   dimensionsforArray <- c(NumArpFiles, NumStructOutFiles, length(ScenarioList))
   ErrorArray <- array(dim=dimensionsforArray, dimnames = list(arpnums, StructOutFiles, ScenarioList))
-
+  
   
   
   while(ArrayBookmark <= length(ScenarioList)){
@@ -688,8 +947,7 @@ CreateH2PErrorArray <- function(ScenarioLoc){
     #lists directories is specified structure path
     #Change path to ../ when arp file separate
     structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
-    structOutFolders <- structOutFolders[-1]
-    structOutFolders <- structOutFolders[-1]
+    structOutFolders <- structOutFolders[-c(1,2)]
     H2PErrorMatrix <- matrix()
     Matrixbookmark <- 1
     StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
@@ -755,8 +1013,7 @@ CreatePUnknownErrorArray <- function(ScenarioLoc){
   
   #y
   structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
-  structOutFolders <- structOutFolders[-1]
-  structOutFolders <- structOutFolders[-1]
+  structOutFolders <- structOutFolders[-c(1,2)]
   StructFolderX <- structOutFolders[ArrayBookmark] #calls singular OutFolder
   StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
   NumStructOutFiles <- length(StructOutFiles)
@@ -812,8 +1069,7 @@ CreatePUnknownErrorArray <- function(ScenarioLoc){
     #lists directories is specified structure path
     #Change path to ../ when arp file separate
     structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
-    structOutFolders <- structOutFolders[-1]
-    structOutFolders <- structOutFolders[-1]
+    structOutFolders <- structOutFolders[-c(1,2)]
     PUnknownErrorMatrix <- matrix()
     Matrixbookmark <- 1
     StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
@@ -879,8 +1135,7 @@ CreateHUnknownErrorArray <- function(ScenarioLoc){
   
   #y
   structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
-  structOutFolders <- structOutFolders[-1]
-  structOutFolders <- structOutFolders[-1]
+  structOutFolders <- structOutFolders[-c(1,2)]
   StructFolderX <- structOutFolders[ArrayBookmark] #calls singular OutFolder
   StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
   NumStructOutFiles <- length(StructOutFiles)
@@ -936,8 +1191,7 @@ CreateHUnknownErrorArray <- function(ScenarioLoc){
     #lists directories is specified structure path
     #Change path to ../ when arp file separate
     structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
-    structOutFolders <- structOutFolders[-1]
-    structOutFolders <- structOutFolders[-1]
+    structOutFolders <- structOutFolders[-c(1,2)]
     HUnknownErrorMatrix <- matrix()
     Matrixbookmark <- 1
     StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
@@ -977,282 +1231,20 @@ CreateHUnknownErrorArray <- function(ScenarioLoc){
   }
   print(ErrorArray)
 }
-
-
-
-
-#Ideally, this function will be used instead of the other array functions by using FindErrors() to decide which FindXError() function to use
-CreateErrorArray <- function(ScenarioLoc, errortype){
-  #while loop to make multiple matrices into an array
-  ArrayBookmark <- 1
-  #Finds number of scenarios saved in wd for z value in the array
-  ScenarioList <- list.dirs(path = ,full.names = FALSE, 
-                            recursive = FALSE)
-  #number of x slots in the array
-  basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
-  arpfilesloc <- paste0(basepath, "/ArpFiles" )
-  totalFilesInFSCOut <- list.files(path = arpfilesloc)
-  listArpFiles <- vector() #finds all files in the Arp folder
-  arpFiles <- list.files(path = arpfilesloc)
-  arpFileBookmark <- 1
-  NumtotalArpFiles <- length(arpFiles)
-  #list of all the arp files
-  while(arpFileBookmark <= NumtotalArpFiles ){
-    if(str_contains(arpFiles[arpFileBookmark], ".arp") == TRUE){
-      listArpFiles <- c(listArpFiles, arpFiles[arpFileBookmark]) 
-    }
-    arpFileBookmark <- arpFileBookmark +1
-  }
-  NumArpFiles <- length(listArpFiles) #counts how many arp files are in the folder
-  
-  
-  
-  #number of y slots in the array
-  structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
-  structOutFolders <- structOutFolders[-1]
-  structOutFolders <- structOutFolders[-1]
-  StructFolderX <- structOutFolders[ArrayBookmark] #calls singular OutFolder
-  StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
-  NumStructOutFiles <- length(StructOutFiles)
-  arpnums <- vector()
-  arpnumsbookmark <- 1
-  while(arpnumsbookmark <= length(listArpFiles)){
-    arpnums <- c(arpnums, arpnumsbookmark)
-    arpnumsbookmark <- arpnumsbookmark +1
-  }
-  
-  #creates initial array with the numbers found above
-  dimensionsforArray <- c(NumArpFiles, NumStructOutFiles, length(ScenarioList))
-  ErrorArray <- array(dim=dimensionsforArray, dimnames = list(arpnums, StructOutFiles, ScenarioList))
-  
-  
-  #while loop for the array
-  while(ArrayBookmark <= length(ScenarioList)){
-    basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
-    arpfilesloc <- paste0(basepath, "/ArpFiles" )
-    
-    #finds the arp files to create labels
-    a <- 1
-    totalFilesInFSCOut <- list.files(path = arpfilesloc)
-    b <- 1
-    d <- 1
-    ArpFilesInFSCOut <- as.numeric(0)
-    totalFilesInFSCOut
-    
-    #only search for .arp files
-    while(b <= length(totalFilesInFSCOut)){
-      searchforarp <- str_contains(totalFilesInFSCOut[b], ".arp")
-      if(searchforarp == TRUE){
-        ArpFilesInFSCOut[d] <- totalFilesInFSCOut[b]
-        d <- d+1
-      }
-      
-      b <- b+1
-    }
-    ScenarioFolder <- paste0(ScenarioList[ArrayBookmark],"/")
-    NumArpFiles <- length(ArpFilesInFSCOut)
-    a <- 1
-    labelsList <- list()
-    #while a is less than or equal to the number of arp files, create labels for each file
-    while(a <= NumArpFiles){
-      arpfilename <- ArpFilesInFSCOut[a]
-      arpfilename = unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
-      FileWithoutArp <- unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
-      #make the structure file and store the original species groups
-      labelsList[[a]] <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder)
-      a<- a+1
-    }
-    
-    #input filename in ""
-    #lists directories is specified structure path
-    #Change path to ../ when arp file separate
-    structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
-    structOutFolders <- structOutFolders[-1]
-    structOutFolders <- structOutFolders[-1]
-    ErrorMatrix <- matrix()
-    Matrixbookmark <- 1
-    StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
-    StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
-    NumStructOutFiles <- length(StructOutFiles)
-    ErrorMatrix <- matrix(nrow = length(structOutFolders), ncol = NumStructOutFiles)
-    
-    while(Matrixbookmark <= length(structOutFolders)){
-      StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
-      StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
-      NumStructOutFiles <- length(StructOutFiles)
-      makeTablesCounter <- 1
-      propError <- vector()
-      
-      
-      allTables <- vector(mode = "list", length = NumStructOutFiles) #creates initial object for all the tables for each run
-      
-      
-      #creates vector of proportion of error for each structure file in a run
-      while(makeTablesCounter <= length(StructOutFiles)){
-        demeQmat <- readQ(paste(basepath,"/", StructFolderX,"/",StructOutFiles[makeTablesCounter],sep = ""))  
-        
-        results <- demeQmat[[StructOutFiles[makeTablesCounter]]]
-        
-        percenterror <- 0
-        allTables[[makeTablesCounter]] <- maketable(results, labelsList[[1]], numberIndsPerSpecies, percenterror)
-        tempvect <- FindErrors(allTables[[makeTablesCounter]], errortype)
-        propMergeError[makeTablesCounter] <- tempvect
-        makeTablesCounter <- makeTablesCounter+1
-      }
-      ErrorMatrix[Matrixbookmark,] <- propError
-      Matrixbookmark <- Matrixbookmark + 1
-    }
-    
-    ErrorArray[,,ArrayBookmark] <- ErrorMatrix
-    ArrayBookmark <- ArrayBookmark +1
-  }
-  print(ErrorArray)
-}
-
-
-CreateCorrectPropArray <- function(ScenarioLoc){
-  ArrayBookmark <- 1
-  ScenarioList <- list.dirs(path = ,full.names = FALSE, 
-                            recursive = FALSE)
-  #x
-  basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
-  arpfilesloc <- paste0(basepath, "/ArpFiles" )
-  totalFilesInFSCOut <- list.files(path = arpfilesloc)
-  listArpFiles <- vector()
-  arpFiles <- list.files(path = arpfilesloc)
-  arpFileBookmark <- 1
-  NumtotalArpFiles <- length(arpFiles)
-  
-  while(arpFileBookmark <= NumtotalArpFiles ){
-    if(str_contains(arpFiles[arpFileBookmark], ".arp") == TRUE){
-      listArpFiles <- c(listArpFiles, arpFiles[arpFileBookmark]) 
-    }
-    arpFileBookmark <- arpFileBookmark +1
-  }
-  NumArpFiles <- length(listArpFiles)
-  
-  
-  
-  #y
-  structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
-  structOutFolders <- structOutFolders[-1]
-  structOutFolders <- structOutFolders[-1]
-  StructFolderX <- structOutFolders[ArrayBookmark] #calls singular OutFolder
-  StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
-  NumStructOutFiles <- length(StructOutFiles)
-  arpnums <- vector()
-  arpnumsbookmark <- 1
-  while(arpnumsbookmark <= length(listArpFiles)){
-    arpnums <- c(arpnums, arpnumsbookmark)
-    arpnumsbookmark <- arpnumsbookmark +1
-  }
-  
-  dimensionsforArray <- c(NumArpFiles, NumStructOutFiles, length(ScenarioList))
-  ErrorArray <- array(dim=dimensionsforArray, dimnames = list(arpnums, StructOutFiles, ScenarioList))
-  
-  
-  
-  while(ArrayBookmark <= length(ScenarioList)){
-    basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
-    arpfilesloc <- paste0(basepath, "/ArpFiles" )
-    
-    #finds the arp files to create labels
-    a <- 1
-    totalFilesInFSCOut <- list.files(path = arpfilesloc)
-    b <- 1
-    d <- 1
-    ArpFilesInFSCOut <- as.numeric(0)
-    totalFilesInFSCOut
-    
-    #only search for .arp files
-    while(b <= length(totalFilesInFSCOut)){
-      searchforarp <- str_contains(totalFilesInFSCOut[b], ".arp")
-      if(searchforarp == TRUE){
-        ArpFilesInFSCOut[d] <- totalFilesInFSCOut[b]
-        d <- d+1
-      }
-      
-      b <- b+1
-    }
-    ScenarioFolder <- paste0(ScenarioList[ArrayBookmark],"/")
-    NumArpFiles <- length(ArpFilesInFSCOut)
-    a <- 1
-    labelsList <- list()
-    #while a is less than or equal to the number of arp files, create labels for each file
-    while(a <= NumArpFiles){
-      arpfilename <- ArpFilesInFSCOut[a]
-      arpfilename = unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
-      FileWithoutArp <- unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
-      #make the structure file and store the original species groups
-      labelsList[[a]] <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder)
-      a<- a+1
-    }
-    
-    #input filename in ""
-    #lists directories is specified structure path
-    #Change path to ../ when arp file separate
-    structOutFolders <- list.dirs(path= basepath, full.names = FALSE)[-1]
-    structOutFolders <- structOutFolders[-1]
-    structOutFolders <- structOutFolders[-1]
-    CorrectPropErrorMatrix <- matrix()
-    Matrixbookmark <- 1
-    StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
-    StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
-    NumStructOutFiles <- length(StructOutFiles)
-    CorrectPropErrorMatrix <- matrix(nrow = length(structOutFolders), ncol = NumStructOutFiles)
-    
-    while(Matrixbookmark <= length(structOutFolders)){
-      StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
-      StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
-      NumStructOutFiles <- length(StructOutFiles)
-      makeTablesCounter <- 1
-      propCorrectPropError <- vector()
-      
-      
-      allTables <- vector(mode = "list", length = NumStructOutFiles) #creates initial object for all the tables for each run
-    
-      
-      #creates vector of proportion of error for each structure file in a run
-      while(makeTablesCounter <= length(StructOutFiles)){
-        demeQmat <- readQ(paste(basepath,"/", StructFolderX,"/",StructOutFiles[makeTablesCounter],sep = ""))  
-        
-        results <- demeQmat[[StructOutFiles[makeTablesCounter]]]
-        
-        percenterror <- 0
-        allTables[[makeTablesCounter]] <- maketable(results, labelsList[[1]], numberIndsPerSpecies, percenterror)
-        
-        propHunknown <- FindHUnknownError(allTables[[makeTablesCounter]])
-        propPUnknown <- FindPUnknownError(allTables[[makeTablesCounter]])
-        propErrror <- FindError(allTables[[makeTablesCounter]])
-        propP2H <- FindP2HError(allTables[[makeTablesCounter]])
-        propH2P <- FindH2PError(allTables[[makeTablesCounter]])
-        tempvect <- 1 - propHunknown - propPUnknown - propErrror - propP2H - propH2P
-        
-        propCorrectPropError[makeTablesCounter] <- tempvect
-        makeTablesCounter <- makeTablesCounter+1
-      }
-      CorrectPropErrorMatrix[Matrixbookmark,] <- propCorrectPropError
-      Matrixbookmark <- Matrixbookmark + 1
-    }
-    
-    ErrorArray[,,ArrayBookmark] <- CorrectPropErrorMatrix
-    ArrayBookmark <- ArrayBookmark +1
-  }
-  print(ErrorArray)
-}
 #Pipeline-----------------------------------------------------------------------
 
-#Setting values the functions need
+#Setting values the functions need ----
 numberIndsPerSpecies <- 10
+setwd("/Users/CHendrikse/Documents/HybridSimulation/Scenarios/4Deme20inds/StructOut7/")
 setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/")
 ScenarioLoc <- getwd()
-StructOutLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/"
+ScenarioLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/"
 CreateP2HErrorArray(ScenarioLoc)
 CreateH2PErrorArray(ScenarioLoc)
 CreatePUnknownErrorArray(ScenarioLoc)
 CreateHUnknownErrorArray(ScenarioLoc)
 CreateCorrectPropArray(ScenarioLoc)
-CreateErrorArray("Merge")
+CreateErrorArray(ScenarioLoc, "P2H")
 
 
 #Before running structure ----
