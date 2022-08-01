@@ -46,7 +46,7 @@ makeStructure <- function(filename,a, numinds, ScenarioFolder){
 
   # filenameforstruct <- paste("parentandhybrid", a, sep="")
   filenameforstruct <- paste0("parentandhybrid", a, ".str")
-  genind2structure(final_genind, file= filenameforstruct, pops=FALSE)
+  #genind2structure(final_genind, file= filenameforstruct, pops=FALSE)
   
   #return the labels for individuals in the order they are in the file
   return(actual_values)
@@ -241,7 +241,7 @@ FindMergeError <- function(tabletocompare){
 
 #Finds the P2H error by looking at if the 
 FindP2HError <- function(completetable){
-  browser()
+
 ClusterBookmark <- 1
 numP2HError <- 0
 while(ClusterBookmark <= length(completetable$Cluster1)){
@@ -261,6 +261,7 @@ while(ClusterBookmark <= length(completetable$Cluster1)){
 }
 
 FindH2PError <- function(completetable){
+  browser()
   ClusterBookmark <- 1
   numH2PError <- 0
   while(ClusterBookmark <= length(completetable$Cluster1)){
@@ -268,7 +269,7 @@ FindH2PError <- function(completetable){
     IndisHybrid <- str_contains(completetable$Original[ClusterBookmark], "hybrid")
     if(Calledhybrid == FALSE && IndisHybrid == TRUE){
       completetable$Comparison[ClusterBookmark] <- "H2P"
-      numH2PError <- numP2HError + 1
+      numH2PError <- numH2PError + 1
     }
     
     ClusterBookmark <- ClusterBookmark +1
@@ -280,6 +281,7 @@ FindH2PError <- function(completetable){
 }
 
 FindPUnknownError <- function(completetable){
+  browser()
     ClusterBookmark <- 1
     numPUError <- 0
     while(ClusterBookmark <= length(completetable$Cluster1)){
@@ -294,6 +296,7 @@ FindPUnknownError <- function(completetable){
     }
     
     propPUError <- numPUError/length(completetable$Comparison)
+  
     return(propPUError)
     
 
@@ -336,7 +339,7 @@ FindErrors <- function(table, errortype){
   if(errortype == "HUnknown" || errortype == "H Unknown"){
     propError <- FindHUnknownError(table)
   }
-  
+  return(propError)
 }
 
 #master function to create the table and calculate proportion of success
@@ -352,12 +355,13 @@ maketable <- function(results, originallabels,numberIndsPerSpecies,percenterror)
   #adding comparison (TRUE/FALSE) values and the original labels of the species they belong to
   completetable <- CompareQ(tabledecisions, originallabels, numberIndsPerSpecies)
   #prints the table
+  print(completetable)
   return(completetable)
 }
 
 #Ideally, this function will be used instead of the other array functions by using FindErrors() to decide which FindXError() function to use
 CreateErrorArray <- function(ScenarioLoc, errortype){
-  browser()
+
   #while loop to make multiple matrices into an array
   ArrayBookmark <- 1
   #Finds number of scenarios saved in wd for z value in the array
@@ -424,6 +428,12 @@ CreateErrorArray <- function(ScenarioLoc, errortype){
       b <- b+1
     }
     ScenarioFolder <- paste0(ScenarioList[ArrayBookmark],"/")
+    if (str_contains(ScenarioFolder, "20") == TRUE){
+      numberIndsPerSpecies <- 20
+    }
+    if(str_contains(ScenarioFolder, "10") == TRUE){
+      numberIndsPerSpecies <- 10
+    }
     NumArpFiles <- length(ArpFilesInFSCOut)
     a <- 1
     labelsList <- list()
@@ -470,7 +480,7 @@ CreateErrorArray <- function(ScenarioLoc, errortype){
         percenterror <- 0
         allTables[[makeTablesCounter]] <- maketable(results, labelsList[[1]], numberIndsPerSpecies, percenterror)
         tempvect <- FindErrors(allTables[[makeTablesCounter]], errortype)
-        propMergeError[makeTablesCounter] <- tempvect
+        propError[makeTablesCounter] <- tempvect
         makeTablesCounter <- makeTablesCounter+1
       }
       ErrorMatrix[Matrixbookmark,] <- propError
@@ -481,9 +491,11 @@ CreateErrorArray <- function(ScenarioLoc, errortype){
     ArrayBookmark <- ArrayBookmark +1
   }
   print(ErrorArray)
+  return(ErrorArray)
 }
 
 CreateCorrectPropArray <- function(ScenarioLoc){
+  browser()
   ArrayBookmark <- 1
   ScenarioList <- list.dirs(path = ,full.names = FALSE, 
                             recursive = FALSE)
@@ -547,6 +559,12 @@ CreateCorrectPropArray <- function(ScenarioLoc){
       b <- b+1
     }
     ScenarioFolder <- paste0(ScenarioList[ArrayBookmark],"/")
+    if (str_contains(ScenarioFolder, "20") == TRUE){
+      numberIndsPerSpecies <- 20
+    }
+    if(str_contains(ScenarioFolder, "10") == TRUE){
+      numberIndsPerSpecies <- 10
+    }
     NumArpFiles <- length(ArpFilesInFSCOut)
     a <- 1
     labelsList <- list()
@@ -594,10 +612,10 @@ CreateCorrectPropArray <- function(ScenarioLoc){
         
         propHunknown <- FindHUnknownError(allTables[[makeTablesCounter]])
         propPUnknown <- FindPUnknownError(allTables[[makeTablesCounter]])
-        propErrror <- FindError(allTables[[makeTablesCounter]])
+        propMergeError <- FindMergeError(allTables[[makeTablesCounter]])
         propP2H <- FindP2HError(allTables[[makeTablesCounter]])
         propH2P <- FindH2PError(allTables[[makeTablesCounter]])
-        tempvect <- 1 - propHunknown - propPUnknown - propErrror - propP2H - propH2P
+        tempvect <- 1 - propHunknown - propPUnknown - propMergeError - propP2H - propH2P
         
         propCorrectPropError[makeTablesCounter] <- tempvect
         makeTablesCounter <- makeTablesCounter+1
@@ -610,7 +628,10 @@ CreateCorrectPropArray <- function(ScenarioLoc){
     ArrayBookmark <- ArrayBookmark +1
   }
   print(ErrorArray)
+  return(ErrorArray)
 }
+
+
 
 
 #Archived functions - saved just in case the CreateErrorArray function doesn't work how it should ----
@@ -808,6 +829,12 @@ CreateP2HErrorArray <- function(ScenarioLoc){
       b <- b+1
     }
     ScenarioFolder <- paste0(ScenarioList[ArrayBookmark],"/")
+    if (str_contains(ScenarioFolder, "20") == TRUE){
+      numberIndsPerSpecies <- 20
+    }
+    if(str_contains(ScenarioFolder, "10") == TRUE){
+      numberIndsPerSpecies <- 10
+    }
     NumArpFiles <- length(ArpFilesInFSCOut)
     a <- 1
     labelsList <- list()
@@ -864,6 +891,7 @@ CreateP2HErrorArray <- function(ScenarioLoc){
     ArrayBookmark <- ArrayBookmark +1
   }
   print(ErrorArray)
+  return(ErrorArray)
 }
 
 CreateH2PErrorArray <- function(ScenarioLoc){
@@ -1234,22 +1262,47 @@ CreateHUnknownErrorArray <- function(ScenarioLoc){
 #Pipeline-----------------------------------------------------------------------
 
 #Setting values the functions need ----
-numberIndsPerSpecies <- 10
+numberIndsPerSpecies <- 20
 setwd("/Users/CHendrikse/Documents/HybridSimulation/Scenarios/4Deme20inds/StructOut7/")
 setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/")
 ScenarioLoc <- getwd()
-ScenarioLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/"
+ScenarioLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/"
 CreateP2HErrorArray(ScenarioLoc)
 CreateH2PErrorArray(ScenarioLoc)
 CreatePUnknownErrorArray(ScenarioLoc)
 CreateHUnknownErrorArray(ScenarioLoc)
-CreateCorrectPropArray(ScenarioLoc)
-CreateErrorArray(ScenarioLoc, "P2H")
+correctarray <- CreateCorrectPropArray(ScenarioLoc)
+ErrorArray <- CreateErrorArray(ScenarioLoc, "Merge")
+
+
+boxplot(list(ErrorArray[,,1],ErrorArray[,,2],ErrorArray[,,3],ErrorArray[,,4]), ylim = c(0,1), pch = 19)
+boxplot(list(correctarray[,,1],correctarray[,,2],correctarray[,,3],correctarray[,,4]), ylim = c(0,1), pch = 19)
+
+
+AverageDF <- matrix(1:10,1)
+matrixBookMark <- 1
+
+while(matrixBookMark <= 4){
+averageinrow <- vector()
+ArrayBookmark <- 1
+while(ArrayBookmark <= length(ErrorArray[,1,matrixBookMark])){
+  averageinrow[ArrayBookmark] <- mean( ErrorArray[ArrayBookmark,,matrixBookMark])
+  ArrayBookmark <- ArrayBookmark+1
+}
+rbind(AverageDF, averageinrow)
+
+matrixBookMark <- matrixBookMark +1
+}
+
+
+
+
+
 
 
 #Before running structure ----
   ScenarioList <- list.dirs(path = , full.names = FALSE, recursive = FALSE)
-  basepath <- paste0(ScenarioLoc,"/", ScenarioList[1])
+  basepath <- paste0(ScenarioLoc,"/", ScenarioList[3])
   arpfilesloc <- paste0(basepath, "/ArpFiles" )
   
   #finds the arp files to create labels
@@ -1270,7 +1323,7 @@ CreateErrorArray(ScenarioLoc, "P2H")
     
     b <- b+1
   }
-  ScenarioFolder <- paste0(ScenarioList[1],"/")
+  ScenarioFolder <- paste0(ScenarioList[3],"/")
   NumArpFiles <- length(ArpFilesInFSCOut)
   a <- 1
   labelsList <- list()
