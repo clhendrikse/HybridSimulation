@@ -8,7 +8,7 @@ library(sjmisc)
 library(dplyr)
 
 #functions ---------------------------------------------------------------------
-# Function converting .arp file to a .gen file 
+# Function takes .arp file makes hybrids, pools them all together and makes a STRUCTURE input file using genind2structure 
 makeStructure <- function(filename,a, numinds, ScenarioFolder){
   ArpFileLocation <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename, ".arp")
   #takes the file name and adds .arp so it can be found in the file\
@@ -52,7 +52,7 @@ makeStructure <- function(filename,a, numinds, ScenarioFolder){
   return(actual_values)
 }
 
-#genind to structure file code (citation in my drive)
+#genind to structure file code (Clark 2017)
 genind2structure <- function(obj, file="", pops=FALSE){
   if(!"genind" %in% class(obj)){
     warning("Function was designed for genind objects.")
@@ -94,7 +94,7 @@ genind2structure <- function(obj, file="", pops=FALSE){
   # export table
   names(tab)[1] <- ""
  write.table(tab, file=file, sep="\t", quote=FALSE, row.names=FALSE)
-} #put pops = true need to call it differently
+} 
 
 
 #function that takes the Q values and creates a new column that labels STRUCTURE's decision changing the value in this function should allow the other functions to still run
@@ -494,6 +494,8 @@ CreateErrorArray <- function(ScenarioLoc, errortype){
   return(ErrorArray)
 }
 
+
+#creates an array for proportion of successful labels by taking 1 and subtracting the proportion of each error
 CreateCorrectPropArray <- function(ScenarioLoc){
   browser()
   ArrayBookmark <- 1
@@ -634,9 +636,8 @@ CreateCorrectPropArray <- function(ScenarioLoc){
 
 
 
-#Archived functions - saved just in case the CreateErrorArray function doesn't work how it should ----
-#put this in a while function
-#creates array to store proportion of individuals in each run that have the merge error
+#Archived functions----
+#Each function creates an array for a different kind of error
 CreateMergeErrorArray <- function(ScenarioLoc){
   #while loop to make multiple matrices into an array
   ArrayBookmark <- 1
@@ -762,7 +763,6 @@ CreateMergeErrorArray <- function(ScenarioLoc){
   }
   print(ErrorArray)
 }
-
 CreateP2HErrorArray <- function(ScenarioLoc){
   
   ArrayBookmark <- 1
@@ -893,7 +893,6 @@ CreateP2HErrorArray <- function(ScenarioLoc){
   print(ErrorArray)
   return(ErrorArray)
 }
-
 CreateH2PErrorArray <- function(ScenarioLoc){
   ArrayBookmark <- 1
   ScenarioList <- list.dirs(path = ,full.names = FALSE, 
@@ -1015,7 +1014,6 @@ CreateH2PErrorArray <- function(ScenarioLoc){
   }
   print(ErrorArray)
 }
-
 CreatePUnknownErrorArray <- function(ScenarioLoc){
   ArrayBookmark <- 1
   ScenarioList <- list.dirs(path = ,full.names = FALSE, 
@@ -1137,7 +1135,6 @@ CreatePUnknownErrorArray <- function(ScenarioLoc){
   }
   print(ErrorArray)
 }
-
 CreateHUnknownErrorArray <- function(ScenarioLoc){
   ArrayBookmark <- 1
   ScenarioList <- list.dirs(path = ,full.names = FALSE, 
@@ -1267,34 +1264,6 @@ setwd("/Users/CHendrikse/Documents/HybridSimulation/Scenarios/4Deme20inds/Struct
 setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/")
 ScenarioLoc <- getwd()
 ScenarioLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/"
-CreateP2HErrorArray(ScenarioLoc)
-CreateH2PErrorArray(ScenarioLoc)
-CreatePUnknownErrorArray(ScenarioLoc)
-CreateHUnknownErrorArray(ScenarioLoc)
-correctarray <- CreateCorrectPropArray(ScenarioLoc)
-ErrorArray <- CreateErrorArray(ScenarioLoc, "Merge")
-
-
-boxplot(list(ErrorArray[,,1],ErrorArray[,,2],ErrorArray[,,3],ErrorArray[,,4]), ylim = c(0,1), pch = 19)
-boxplot(list(correctarray[,,1],correctarray[,,2],correctarray[,,3],correctarray[,,4]), ylim = c(0,1), pch = 19)
-
-
-AverageDF <- matrix(1:10,1)
-matrixBookMark <- 1
-
-while(matrixBookMark <= 4){
-averageinrow <- vector()
-ArrayBookmark <- 1
-while(ArrayBookmark <= length(ErrorArray[,1,matrixBookMark])){
-  averageinrow[ArrayBookmark] <- mean( ErrorArray[ArrayBookmark,,matrixBookMark])
-  ArrayBookmark <- ArrayBookmark+1
-}
-rbind(AverageDF, averageinrow)
-
-matrixBookMark <- matrixBookMark +1
-}
-
-
 
 
 
@@ -1341,4 +1310,11 @@ matrixBookMark <- matrixBookMark +1
 
 
 #After Structure: reads structure's results and makes the table and outputs the proportion of success----
-MergeErrorNumVect <- CreateMergeErrorArray(ScenarioLoc)
+  correctarray <- CreateCorrectPropArray(ScenarioLoc)
+  ErrorArray <- CreateErrorArray(ScenarioLoc, "Merge")
+  
+  #Creating boxplot for data
+  boxplot(list(ErrorArray[,,1],ErrorArray[,,2],ErrorArray[,,3],ErrorArray[,,4]), ylim = c(0,1), pch = 19)
+  boxplot(list(correctarray[,,1],correctarray[,,2],correctarray[,,3],correctarray[,,4]), ylim = c(0,1), pch = 19)
+  
+  
