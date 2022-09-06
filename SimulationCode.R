@@ -14,6 +14,12 @@ makeStructure <- function(filename,a, numinds, ScenarioFolder){
   #takes the file name and adds .arp so it can be found in the file\
   arp2gen(ArpFileLocation)
   filename <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename)
+
+  totalstr[3]
+  data <- strsplit(totalstr, split = "_")
+  numindstotal <- data[[1]][3]
+  numinds <- gsub("ns", "", numindstotal)
+  as.numeric(numinds)
   #turning file into a genind object
   addgen<- paste(filename, ".gen", sep="")
   genindobj <- read.genepop(addgen, ncode = 3)
@@ -44,9 +50,9 @@ makeStructure <- function(filename,a, numinds, ScenarioFolder){
   
   #writing values into structure file
 
-  # filenameforstruct <- paste("parentandhybrid", a, sep="")
+  filenameforstruct <- paste("parentandhybrid", a, sep="")
   filenameforstruct <- paste0("parentandhybrid", a, ".str")
-  #genind2structure(final_genind, file= filenameforstruct, pops=FALSE)
+  genind2structure(final_genind, file= filenameforstruct, pops=FALSE)
   
   #return the labels for individuals in the order they are in the file
   return(actual_values)
@@ -99,7 +105,7 @@ genind2structure <- function(obj, file="", pops=FALSE){
 
 #function that takes the Q values and creates a new column that labels STRUCTURE's decision changing the value in this function should allow the other functions to still run
 structuredecision <- function(obj){
-  #putting individuals in groups depending on what STRUCTURE decides (max is 10 clusters)
+  #putting individuals in groups depending on what STRUCTURE decides 
   obj$Decision<-0 #declare a new column, to hold Decisions
   for (i in 1:nrow(obj)){ #for all rows e.g. all individuals
     #first check if the individual is a pure species (>0.9) and if yes, assign it to the cluster for the column number which is >0.9
@@ -126,7 +132,6 @@ AddingTrueGroup <- function(tabledecisions){
  
   #while loop looking for the number of times the individual matches clusters with other individuals in the same species
   #if the cluster is used 5 or more times, it is assumed to be the correct cluster
-  
   while(a <= length(tabledecisions$Cluster1)){
      decisionvect <- tabledecisions$Decision[c:b]
      
@@ -428,6 +433,14 @@ CreateErrorArray <- function(ScenarioLoc, errortype){
       b <- b+1
     }
     ScenarioFolder <- paste0(ScenarioList[ArrayBookmark],"/")
+    
+    #Finding number of inds change later
+    totalstr <- ScenarioList[ArrayBookmark]
+    totalstr[3]
+    data <- strsplit(totalstr, split = "_")
+    numindstotal <- data[[1]][3]
+    numinds <- gsub("ns", "", numindstotal)
+    numberIndsPerSpecies <- as.numeric(numinds)
     if (str_contains(ScenarioFolder, "20") == TRUE){
       numberIndsPerSpecies <- 20
     }
@@ -1262,8 +1275,9 @@ CreateHUnknownErrorArray <- function(ScenarioLoc){
 numberIndsPerSpecies <- 20
 setwd("/Users/CHendrikse/Documents/HybridSimulation/Scenarios/4Deme20inds/StructOut7/")
 setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/")
+setwd("/Users/clhen/Documents/HybridSimulation/Scenarios/")
 ScenarioLoc <- getwd()
-ScenarioLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/"
+ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/Scenarios/"
 
 
 
@@ -1271,7 +1285,7 @@ ScenarioLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/"
 
 #Before running structure ----
   ScenarioList <- list.dirs(path = , full.names = FALSE, recursive = FALSE)
-  basepath <- paste0(ScenarioLoc,"/", ScenarioList[3])
+  basepath <- paste0(ScenarioLoc, ScenarioList[4])
   arpfilesloc <- paste0(basepath, "/ArpFiles" )
   
   #finds the arp files to create labels
@@ -1292,8 +1306,8 @@ ScenarioLoc <- "/Users/CHendrikse/Documents/REUHybridSimulation/"
     
     b <- b+1
   }
-  ScenarioFolder <- paste0(ScenarioList[3],"/")
-  NumArpFiles <- length(ArpFilesInFSCOut)
+  ScenarioFolder <- paste0(ScenarioList[4],"/")
+  NumArpFiles <- 10
   a <- 1
   labelsList <- list()
   #while a is less than or equal to the number of arp files, create labels for each file
