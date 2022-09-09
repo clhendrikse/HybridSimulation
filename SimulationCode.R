@@ -49,7 +49,7 @@ makeStructure <- function(filename,a, numinds, ScenarioFolder){
   actual_values <- as.vector(final_genind_df$pop)
   
   #writing values into structure file
-
+  #change so parentandhybrid01, parentandhybrid02... parentandhybrid10
   filenameforstruct <- paste("parentandhybrid", a, sep="")
   filenameforstruct <- paste0("parentandhybrid", a, ".str")
   genind2structure(final_genind, file= filenameforstruct, pops=FALSE)
