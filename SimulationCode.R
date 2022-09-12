@@ -1,5 +1,18 @@
 remotes::install_github('royfrancis/pophelper')
 
+#--------------------------------------------
+#HybridSimulation
+
+#Script includes three parts
+#The first is used before running STRUCTURE after making .arp files in FastSimCoal 2.6. the function makeStructure makes hybrid individuals pools all individuals into a genind
+#    object and uses the function genind2structure (Clark 2017) to create a STRUCTURE input file
+#The second part includes functions that create an array with the percentage of errors and "success" with the results matching the expected outcomes which is done by creating a
+#    table for each run. The individuals are listed along with the correct placement then a column with STRUCTURE's decision is added based on Q values. Q vals beteen .4 and .6 are
+#    listed as hybrids Q values above .9 are labeled as pure. the code then compares the correct value with the decision and labels if it is correct or if an error has been made
+#The final part is listed as Archived Functions which were originally used to make arrays finding proportions of different errors
+
+#Future change plans are noted in the comments and can be found by finding the word change
+
 library(remotes)
 library(diveRsity)
 library(adegenet)
@@ -8,18 +21,23 @@ library(sjmisc)
 library(dplyr)
 
 #functions ---------------------------------------------------------------------
-# Function takes .arp file makes hybrids, pools them all together and makes a STRUCTURE input file using genind2structure 
+# Function uses the location of the arp files to make hybrids, pools them all together and makes a STRUCTURE input file using genind2structure 
 makeStructure <- function(filename,a, numinds, ScenarioFolder){
+  
+  #Finds the arp files location so the files can be looped to create the STRUCTURE input files for each arp file
   ArpFileLocation <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename, ".arp")
-  #takes the file name and adds .arp so it can be found in the file\
+  
+  #Uses the name of the scenario folder to find the number of individuals per species (will need to be changed later in event name of scenarios need to be changed)
+  splitScenario <- strsplit(ScenarioFolder, split = "_")
+  numindstotal <- splitScenario[[1]][3]
+  numinds <- gsub("ns", "", numindstotal)
+  as.numeric(numinds)
+  
+  #takes the file name and adds .arp so it can be found in the file
   arp2gen(ArpFileLocation)
   filename <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename)
 
-  totalstr[3]
-  data <- strsplit(totalstr, split = "_")
-  numindstotal <- data[[1]][3]
-  numinds <- gsub("ns", "", numindstotal)
-  as.numeric(numinds)
+  
   #turning file into a genind object
   addgen<- paste(filename, ".gen", sep="")
   genindobj <- read.genepop(addgen, ncode = 3)
@@ -27,7 +45,7 @@ makeStructure <- function(filename,a, numinds, ScenarioFolder){
   #taking the genpop object and separating it into genind objects
   individuals <- seppop(genindobj,res.type="genind")
   
-  #hybridizing pop1 and pop2
+  #making hybrids from pop1 and pop2
   hybrids <- hybridize(individuals[["pop1"]], individuals[["pop2"]], pop = "hybrid", n=numinds)
   
   #storing all species info into one genind object 4_1 referring to 4 demes n=1
@@ -104,7 +122,9 @@ genind2structure <- function(obj, file="", pops=FALSE){
 
 
 #function that takes the Q values and creates a new column that labels STRUCTURE's decision changing the value in this function should allow the other functions to still run
+#values between .4 and .6 are labeled as hybrid, above .9 are labeled as pure, and any other values are labeled as unknown
 structuredecision <- function(obj){
+  
   #putting individuals in groups depending on what STRUCTURE decides 
   obj$Decision<-0 #declare a new column, to hold Decisions
   for (i in 1:nrow(obj)){ #for all rows e.g. all individuals
@@ -127,20 +147,20 @@ AddingTrueGroup <- function(tabledecisions){
   a <- 1
   b<-a*10
   c <- b-9
-  #setting base value for the vector
-  vect <- "unknown"
+  #creating vector to store true values changed from vect <- "unknown" on 9/11/22
+  vect <- vector()
  
   #while loop looking for the number of times the individual matches clusters with other individuals in the same species
   #if the cluster is used 5 or more times, it is assumed to be the correct cluster
   while(a <= length(tabledecisions$Cluster1)){
      decisionvect <- tabledecisions$Decision[c:b]
      
-
+  #looks to see if a decision is decided five or more times within a cluster, if it is, that is determined to be the "true" value
     if(length(str_find(decisionvect,tabledecisions$Decision[a])) >= 5){
      vect[c:b] <- tabledecisions$Decision[a] 
     }
      
-     
+     #looks one cluster at a time when the cluster has been read through, it finds the next cluster (Change later so numinds value is used here rather than increasing by 10)
     if(a%%10 == 0){
       b <- b+10
       c<- c+10
@@ -150,15 +170,17 @@ AddingTrueGroup <- function(tabledecisions){
   #putting the vector of actual clusters into a new column
   tabledecisions$ActualVals <- vect
   
+  #returns the table with decisions
   return(tabledecisions)
 }
 
 #comparing groups and giving either TRUE or FALSE values depending on if STRUCTURE was correct in the individuals placement
 CompareQ <- function(tabletocompare, originalLabels, numberIndsPerSpecies){
   
-
+  #creating placeholder for loop
   bookmark <- 1
-  #creating initial comparison object
+  
+  #creating initial comparison object if the true value and decision are the same, the comparison is labeled as TRUE, if not, it is FALSE
   if(tabletocompare$Decision[1] %in% tabletocompare$ActualVals[1]){
     bookmark <- bookmark +1
     comparison <- c(TRUE)
@@ -244,31 +266,44 @@ FindMergeError <- function(tabletocompare){
 
 }
 
-#Finds the P2H error by looking at if the 
+#Finds the P2H error by looking at if the decison is Hybrid when the true value is Pure 
 FindP2HError <- function(completetable){
-
+#loop placemarker
 ClusterBookmark <- 1
+
+#starts with initial error value of 0
 numP2HError <- 0
+#while loop if decision is labeled as hybrid, and the true value is not labeled as hybrid, the comparison label changes to label the error and the count of the error increases by 1
 while(ClusterBookmark <= length(completetable$Cluster1)){
+  #looks for the true and STRUCTUREs decision to be hybrid
   Calledhybrid <- str_contains(completetable$Decision[ClusterBookmark], "hybrid" )
   IndisHybrid <- str_contains(completetable$Original[ClusterBookmark], "hybrid")
+  
+  #if the decision is labeled hybrid, but it shouldn't the P2H label is added
   if(Calledhybrid == TRUE && IndisHybrid == FALSE){
     completetable$Comparison[ClusterBookmark] <- "P2H"
     numP2HError <- numP2HError + 1
   }
-  
+  #placeholder increases by 1
   ClusterBookmark <- ClusterBookmark +1
 }
-  
+ 
+#find the proportion of the error by dividing the number of times it occurs by the total number of individuals 
   propP2HError <- numP2HError/length(completetable$Comparison)
   return(propP2HError)
    
 }
 
+#Finds the H2P error by looking at if the decison is Pure when the true value is Hybrid
 FindH2PError <- function(completetable){
-  browser()
+  
+  #placeholder for loop
   ClusterBookmark <- 1
+  
+  #initial value of 0 for H2P error
   numH2PError <- 0
+  
+  #looks to see if the decision and true value are hybrid, if the decision is not labeled as hybrid and the true value is hybrid, the H2P label is added to the comparisson column
   while(ClusterBookmark <= length(completetable$Cluster1)){
     Calledhybrid <- str_contains(completetable$Decision[ClusterBookmark], "hybrid" )
     IndisHybrid <- str_contains(completetable$Original[ClusterBookmark], "hybrid")
@@ -280,18 +315,25 @@ FindH2PError <- function(completetable){
     ClusterBookmark <- ClusterBookmark +1
   }
   
+  #finds the proportion of the error by dividing number of inds with the error by the total number of inds
   propH2PError <- numH2PError/length(completetable$Comparison)
   return(propH2PError)
   
 }
 
+#Finds the P2H error by looking at if the decison is unknown when the true value is Pure 
 FindPUnknownError <- function(completetable){
-  browser()
+
     ClusterBookmark <- 1
     numPUError <- 0
+    
+    #while loop looking for the decision to be labeled as unknown and the true value is one of the pure species, if so the P Unknown label is added
     while(ClusterBookmark <= length(completetable$Cluster1)){
+      #lookds for decision and true group
       CalledUnknown <- str_contains(completetable$Decision[ClusterBookmark], "unknown" )
       IndisPure <- str_contains(completetable$Original[ClusterBookmark], "pop")
+      
+      #adds label for inds with p unknown error
       if(CalledUnknown== TRUE && IndisPure == TRUE){
         completetable$Comparison[ClusterBookmark] <- "P Unknown"
         numPUError <- numPUError + 1
@@ -300,6 +342,7 @@ FindPUnknownError <- function(completetable){
       ClusterBookmark <- ClusterBookmark +1
     }
     
+    #finds prop of the error by dividing number of inds with error by total number of inds
     propPUError <- numPUError/length(completetable$Comparison)
   
     return(propPUError)
@@ -307,9 +350,12 @@ FindPUnknownError <- function(completetable){
 
 }
 
+#Finds the P2H error by looking at if the decison is unknown when the true value is hybrid 
 FindHUnknownError <- function(completetable){
   ClusterBookmark <- 1
   numHUError <- 0
+  
+  #looks for decision to be labeled as unknown and the true value to be hybrid, if so, H unknown label is added
   while(ClusterBookmark <= length(completetable$Cluster1)){
     CalledUnknown <- str_contains(completetable$Decision[ClusterBookmark], "unknown" )
     IndisHybrid <- str_contains(completetable$Original[ClusterBookmark], "Hybrid")
@@ -321,13 +367,14 @@ FindHUnknownError <- function(completetable){
     ClusterBookmark <- ClusterBookmark +1
   }
   
+  #finds prop by dividing number of inds with error by total number of inds
   propHUError <- numHUError/length(completetable$Comparison)
   return(propHUError)
   
   
 }
 
-#Calls the FindError functions to find proportion of error depending on what error type is specified
+#Calls the FindError functions to find proportion of error depending on what error type is specified. Options are Merge, P2H, H2P, PUnknown/P Unknown, HUnknown/H Unknown
 FindErrors <- function(table, errortype){
   if(errortype == "Merge"){
     propError <- FindMergeError(table)
@@ -364,7 +411,7 @@ maketable <- function(results, originallabels,numberIndsPerSpecies,percenterror)
   return(completetable)
 }
 
-#Ideally, this function will be used instead of the other array functions by using FindErrors() to decide which FindXError() function to use
+#Uses FindErrors() to decide which FindXError() function to use and creates array of the error. First specifies axes initial vals then inputs the information using the findError functions.
 CreateErrorArray <- function(ScenarioLoc, errortype){
 
   #while loop to make multiple matrices into an array
@@ -508,9 +555,9 @@ CreateErrorArray <- function(ScenarioLoc, errortype){
 }
 
 
-#creates an array for proportion of successful labels by taking 1 and subtracting the proportion of each error
+#creates an array for proportion of successful labels by taking 1 and subtracting the proportion of each error first specifies axes initial vals then inputs the information using the findError functions.
 CreateCorrectPropArray <- function(ScenarioLoc){
-  browser()
+
   ArrayBookmark <- 1
   ScenarioList <- list.dirs(path = ,full.names = FALSE, 
                             recursive = FALSE)
@@ -1272,6 +1319,8 @@ CreateHUnknownErrorArray <- function(ScenarioLoc){
 #Pipeline-----------------------------------------------------------------------
 
 #Setting values the functions need ----
+
+#input number of inds per species to decide how many hybrids to make (Should be changed later due to makestructure() using the file names rather than this input)
 numberIndsPerSpecies <- 20
 setwd("/Users/CHendrikse/Documents/HybridSimulation/Scenarios/4Deme20inds/StructOut7/")
 setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/")
@@ -1282,10 +1331,9 @@ ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/Scenarios/"
 
 
 
-
 #Before running structure ----
   ScenarioList <- list.dirs(path = , full.names = FALSE, recursive = FALSE)
-  basepath <- paste0(ScenarioLoc, ScenarioList[4])
+  basepath <- paste0(ScenarioLoc, ScenarioList[5])
   arpfilesloc <- paste0(basepath, "/ArpFiles" )
   
   #finds the arp files to create labels
@@ -1306,7 +1354,7 @@ ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/Scenarios/"
     
     b <- b+1
   }
-  ScenarioFolder <- paste0(ScenarioList[4],"/")
+  ScenarioFolder <- paste0(ScenarioList[5],"/")
   NumArpFiles <- 10
   a <- 1
   labelsList <- list()
