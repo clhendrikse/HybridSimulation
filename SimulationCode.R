@@ -1333,7 +1333,7 @@ ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/Scenarios/"
 
 #Before running structure ----
   ScenarioList <- list.dirs(path = , full.names = FALSE, recursive = FALSE)
-  basepath <- paste0(ScenarioLoc, ScenarioList[5])
+  basepath <- paste0(ScenarioLoc, "/", ScenarioList[6])
   arpfilesloc <- paste0(basepath, "/ArpFiles" )
   
   #finds the arp files to create labels
@@ -1354,7 +1354,7 @@ ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/Scenarios/"
     
     b <- b+1
   }
-  ScenarioFolder <- paste0(ScenarioList[5],"/")
+  ScenarioFolder <- paste0(ScenarioList[6],"/")
   NumArpFiles <- 10
   a <- 1
   labelsList <- list()
