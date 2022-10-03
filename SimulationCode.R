@@ -22,7 +22,7 @@ library(dplyr)
 
 #functions ---------------------------------------------------------------------
 # Function uses the location of the arp files to make hybrids, pools them all together and makes a STRUCTURE input file using genind2structure 
-makeStructure <- function(filename,a, numinds, ScenarioFolder){
+makeStructure <- function(filename,a, numinds, ScenarioFolder, InFunction){
   
   #Finds the arp files location so the files can be looped to create the STRUCTURE input files for each arp file
   ArpFileLocation <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename, ".arp")
@@ -30,7 +30,7 @@ makeStructure <- function(filename,a, numinds, ScenarioFolder){
   #Uses the name of the scenario folder to find the number of individuals per species (will need to be changed later in event name of scenarios need to be changed)
   splitScenario <- strsplit(ScenarioFolder, split = "_")
   numindstotal <- splitScenario[[1]][3]
-  numinds <- gsub("ns", "", numindstotal)
+  numinds <- gsub("ns/", "", numindstotal)
   as.numeric(numinds)
   
   #takes the file name and adds .arp so it can be found in the file
@@ -70,7 +70,9 @@ makeStructure <- function(filename,a, numinds, ScenarioFolder){
   #change so parentandhybrid01, parentandhybrid02... parentandhybrid10
   filenameforstruct <- paste("parentandhybrid", a, sep="")
   filenameforstruct <- paste0("parentandhybrid", a, ".str")
+  if(InFunction == FALSE){
   genind2structure(final_genind, file= filenameforstruct, pops=FALSE)
+  }
   
   #return the labels for individuals in the order they are in the file
   return(actual_values)
@@ -212,7 +214,7 @@ CompareQ <- function(tabletocompare, originalLabels, numberIndsPerSpecies){
 #Note: if each species has 10 inds, but STRUCTURE labeled 20 inds in the same cluster, all 20 inds are labeled as incorrect
 FindMergeError <- function(tabletocompare){
   #taking the number of individuals per species and finding the result for each group if two or more groups are put into the same cluster, a warning will print
-  
+  browser()
   #starting point for finding the population clusters
   x<- numberIndsPerSpecies -1
   #Creating initial object for the clusters and number of times the error occurres
@@ -503,7 +505,8 @@ CreateErrorArray <- function(ScenarioLoc, errortype){
       arpfilename = unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
       FileWithoutArp <- unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
       #make the structure file and store the original species groups
-      labelsList[[a]] <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder)
+      InFunction <- TRUE
+      labelsList[[a]] <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder, InFunction)
       a<- a+1
     }
     
@@ -540,14 +543,14 @@ CreateErrorArray <- function(ScenarioLoc, errortype){
         percenterror <- 0
         allTables[[makeTablesCounter]] <- maketable(results, labelsList[[1]], numberIndsPerSpecies, percenterror)
         tempvect <- FindErrors(allTables[[makeTablesCounter]], errortype)
-        propError[makeTablesCounter] <- tempvect
+        propError[makeTablesCounter] <- tempvect #check for error here
         makeTablesCounter <- makeTablesCounter+1
       }
       ErrorMatrix[Matrixbookmark,] <- propError
       Matrixbookmark <- Matrixbookmark + 1
     }
     
-    ErrorArray[,,ArrayBookmark] <- ErrorMatrix
+    ErrorArray[,,ArrayBookmark] <- ErrorMatrix #through here
     ArrayBookmark <- ArrayBookmark +1
   }
   print(ErrorArray)
@@ -562,7 +565,7 @@ CreateCorrectPropArray <- function(ScenarioLoc){
   ScenarioList <- list.dirs(path = ,full.names = FALSE, 
                             recursive = FALSE)
   #x
-  basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
+  basepath <- paste0(ScenarioLoc, ScenarioList[ArrayBookmark])
   arpfilesloc <- paste0(basepath, "/ArpFiles" )
   totalFilesInFSCOut <- list.files(path = arpfilesloc)
   listArpFiles <- vector()
@@ -597,10 +600,15 @@ CreateCorrectPropArray <- function(ScenarioLoc){
   ErrorArray <- array(dim=dimensionsforArray, dimnames = list(arpnums, StructOutFiles, ScenarioList))
   
   
-  
+ 
   while(ArrayBookmark <= length(ScenarioList)){
-    basepath <- paste0(ScenarioLoc,"/", ScenarioList[ArrayBookmark])
+    basepath <- paste0(ScenarioLoc, ScenarioList[ArrayBookmark])
     arpfilesloc <- paste0(basepath, "/ArpFiles" )
+    scenarioName <- strsplit(basepath, "/")
+    scenarioVariables <- strsplit(scenarioName[[1]][7], "_")
+    numberIndsPerSpecies <- scenarioVariables[[1]][3]
+  
+    numberIndsPerSpecies <- as.numeric(gsub("ns", "", numberIndsPerSpecies))
     
     #finds the arp files to create labels
     a <- 1
@@ -636,7 +644,8 @@ CreateCorrectPropArray <- function(ScenarioLoc){
       arpfilename = unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
       FileWithoutArp <- unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
       #make the structure file and store the original species groups
-      labelsList[[a]] <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder)
+      InFunction <- TRUE
+      labelsList[[a]] <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder, InFunction)
       a<- a+1
     }
     
@@ -652,6 +661,7 @@ CreateCorrectPropArray <- function(ScenarioLoc){
     NumStructOutFiles <- length(StructOutFiles)
     CorrectPropErrorMatrix <- matrix(nrow = length(structOutFolders), ncol = NumStructOutFiles)
     
+    browser()
     while(Matrixbookmark <= length(structOutFolders)){
       StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
       StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
@@ -679,7 +689,7 @@ CreateCorrectPropArray <- function(ScenarioLoc){
         propH2P <- FindH2PError(allTables[[makeTablesCounter]])
         tempvect <- 1 - propHunknown - propPUnknown - propMergeError - propP2H - propH2P
         
-        propCorrectPropError[makeTablesCounter] <- tempvect
+        propCorrectPropError[makeTablesCounter] <- tempvect #look for error
         makeTablesCounter <- makeTablesCounter+1
       }
       CorrectPropErrorMatrix[Matrixbookmark,] <- propCorrectPropError
@@ -1324,7 +1334,7 @@ CreateHUnknownErrorArray <- function(ScenarioLoc){
 numberIndsPerSpecies <- 20
 setwd("/Users/CHendrikse/Documents/HybridSimulation/Scenarios/4Deme20inds/StructOut7/")
 setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/")
-setwd("/Users/clhen/Documents/HybridSimulation/Scenarios/")
+setwd("/Users/clhen/Documents/HybridSimulation/Scenarios/") #for my laptop
 ScenarioLoc <- getwd()
 ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/Scenarios/"
 
@@ -1333,9 +1343,9 @@ ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/Scenarios/"
 
 #Before running structure ----
   ScenarioList <- list.dirs(path = , full.names = FALSE, recursive = FALSE)
-  basepath <- paste0(ScenarioLoc, "/", ScenarioList[6])
+  basepath <- paste0(ScenarioLoc, "/", ScenarioList[8])
   arpfilesloc <- paste0(basepath, "/ArpFiles" )
-  
+  InFunction <- FALSE
   #finds the arp files to create labels
   a <- 1
   totalFilesInFSCOut <- list.files(path = arpfilesloc)
@@ -1354,7 +1364,7 @@ ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/Scenarios/"
     
     b <- b+1
   }
-  ScenarioFolder <- paste0(ScenarioList[6],"/")
+  ScenarioFolder <- paste0(ScenarioList[8],"/")
   NumArpFiles <- 10
   a <- 1
   labelsList <- list()
@@ -1363,7 +1373,7 @@ ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/Scenarios/"
     arpfilename <- ArpFilesInFSCOut[a]
     arpfilename <- unlist(strsplit(arpfilename, split='.', fixed=TRUE))[1]
     #make the structure file and store the original species groups
-    labelsList[[a]] <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder)
+    labelsList[[a]] <-makeStructure(arpfilename, a,numberIndsPerSpecies, ScenarioFolder, InFunction)
     a<- a+1
   }
   
