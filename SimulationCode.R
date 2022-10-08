@@ -212,9 +212,10 @@ CompareQ <- function(tabletocompare, originalLabels, numberIndsPerSpecies){
 
 #Finds the proportion of times STRUCTURE incorrectly labeled individuals from two different species as the same
 #Note: if each species has 10 inds, but STRUCTURE labeled 20 inds in the same cluster, all 20 inds are labeled as incorrect
-FindMergeError <- function(tabletocompare){
+
+FindMergeError <- function(tabletocompare, numberIndsPerSpecies){
   #taking the number of individuals per species and finding the result for each group if two or more groups are put into the same cluster, a warning will print
-  browser()
+browser()
   #starting point for finding the population clusters
   x<- numberIndsPerSpecies -1
   #Creating initial object for the clusters and number of times the error occurres
@@ -530,7 +531,6 @@ CreateErrorArray <- function(ScenarioLoc, errortype){
       propError <- vector()
       demeQmat <- readQ(paste(basepath,"/", StructFolderX,"/",StructOutFiles[makeTablesCounter],sep = ""))  
       
-      
       allTables <- vector(mode = "list", length = NumStructOutFiles) #creates initial object for all the tables for each run
       
       
@@ -661,7 +661,7 @@ CreateCorrectPropArray <- function(ScenarioLoc){
     NumStructOutFiles <- length(StructOutFiles)
     CorrectPropErrorMatrix <- matrix(nrow = length(structOutFolders), ncol = NumStructOutFiles)
     
-    browser()
+  
     while(Matrixbookmark <= length(structOutFolders)){
       StructFolderX <- structOutFolders[Matrixbookmark] #calls singular OutFolder
       StructOutFiles <- list.files(path = paste0(basepath ,"/", StructFolderX)) #finds all Structure output files within folder
@@ -680,11 +680,10 @@ CreateCorrectPropArray <- function(ScenarioLoc){
         results <- demeQmat[[StructOutFiles[makeTablesCounter]]]
         
         percenterror <- 0
-        allTables[[makeTablesCounter]] <- maketable(results, labelsList[[1]], numberIndsPerSpecies, percenterror)
-        
+        allTables[[makeTablesCounter]] <- maketable(results, labelsList[[makeTablesCounter]], numberIndsPerSpecies, percenterror)
         propHunknown <- FindHUnknownError(allTables[[makeTablesCounter]])
         propPUnknown <- FindPUnknownError(allTables[[makeTablesCounter]])
-        propMergeError <- FindMergeError(allTables[[makeTablesCounter]])
+        propMergeError <- FindMergeError(allTables[[makeTablesCounter]], numberIndsPerSpecies)
         propP2H <- FindP2HError(allTables[[makeTablesCounter]])
         propH2P <- FindH2PError(allTables[[makeTablesCounter]])
         tempvect <- 1 - propHunknown - propPUnknown - propMergeError - propP2H - propH2P
@@ -695,7 +694,7 @@ CreateCorrectPropArray <- function(ScenarioLoc){
       CorrectPropErrorMatrix[Matrixbookmark,] <- propCorrectPropError
       Matrixbookmark <- Matrixbookmark + 1
     }
-    
+
     ErrorArray[,,ArrayBookmark] <- CorrectPropErrorMatrix
     ArrayBookmark <- ArrayBookmark +1
   }
@@ -1383,10 +1382,10 @@ ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/Scenarios/"
 
 #After Structure: reads structure's results and makes the table and outputs the proportion of success----
   correctarray <- CreateCorrectPropArray(ScenarioLoc)
-  ErrorArray <- CreateErrorArray(ScenarioLoc, "Merge")
+  ErrorArray <- CreateErrorArray(ScenarioLoc, "H2P")
   
   #Creating boxplot for data
-  boxplot(list(ErrorArray[,,1],ErrorArray[,,2],ErrorArray[,,3],ErrorArray[,,4]), ylim = c(0,1), pch = 19)
-  boxplot(list(correctarray[,,1],correctarray[,,2],correctarray[,,3],correctarray[,,4]), ylim = c(0,1), pch = 19)
+  boxplot(list(ErrorArray[,,1],ErrorArray[,,2],ErrorArray[,,3],ErrorArray[,,4],ErrorArray[,,5],ErrorArray[,,6],ErrorArray[,,7],ErrorArray[,,8],ErrorArray[,,9],ErrorArray[,,10]), ylim = c(0,1), pch = 19)
+  boxplot(list(correctarray[,,1],correctarray[,,2],correctarray[,,3],correctarray[,,4],correctarray[,,5],correctarray[,,6],correctarray[,,7],correctarray[,,8], correctarray[,,9],correctarray[,,10]), ylim = c(0,1), pch = 19)
   
   
