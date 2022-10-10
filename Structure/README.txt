@@ -1,0 +1,1 @@
+File for running structure using 50000 burnin and reps before we changed to 200000

@@ -1,0 +1,1 @@
+Scenarios using settings that we tried using to increase STRUCTURE's accurracy, but did not end up using for the final scenarios
