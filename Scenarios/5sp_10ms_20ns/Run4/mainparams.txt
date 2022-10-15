@@ -12,7 +12,7 @@ FILE extraparams.
 
 Basic Program Parameters
 
-#define MAXPOPS    4      // (int) number of populations assumed
+#define MAXPOPS    5      // (int) number of populations assumed
 #define BURNIN    200000   // (int) length of burnin period
 #define NUMREPS   200000   // (int) number of MCMC reps after burnin
 
@@ -23,8 +23,8 @@ Input/Output files
 
 Data file format
 
-#define NUMINDS     50  // (int) number of diploid individuals in data file
-#define NUMLOCI     150  // (int) number of loci in data file
+#define NUMINDS     120  // (int) number of diploid individuals in data file
+#define NUMLOCI     100  // (int) number of loci in data file
 #define PLOIDY       2    // (int) ploidy of data
 #define MISSING      0    // (int) value given to missing genotype data
 #define ONEROWPERIND 0    // (B) store data for individuals in a single line
