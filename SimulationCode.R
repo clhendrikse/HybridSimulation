@@ -23,7 +23,6 @@ library(dplyr)
 #functions ---------------------------------------------------------------------
 # Function uses the location of the arp files to make hybrids, pools them all together and makes a STRUCTURE input file using genind2structure 
 makeStructure <- function(filename,a, numinds, ScenarioFolder, InFunction){
-  
   #Finds the arp files location so the files can be looped to create the STRUCTURE input files for each arp file
   ArpFileLocation <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename, ".arp")
   
@@ -215,7 +214,7 @@ CompareQ <- function(tabletocompare, originalLabels, numberIndsPerSpecies){
 
 FindMergeError <- function(tabletocompare, numberIndsPerSpecies){
   #taking the number of individuals per species and finding the result for each group if two or more groups are put into the same cluster, a warning will print
-browser()
+#browser()
   #starting point for finding the population clusters
   x<- numberIndsPerSpecies -1
   #Creating initial object for the clusters and number of times the error occurres
@@ -560,7 +559,7 @@ CreateErrorArray <- function(ScenarioLoc, errortype){
 
 #creates an array for proportion of successful labels by taking 1 and subtracting the proportion of each error first specifies axes initial vals then inputs the information using the findError functions.
 CreateCorrectPropArray <- function(ScenarioLoc){
-
+#browser()
   ArrayBookmark <- 1
   ScenarioList <- list.dirs(path = ,full.names = FALSE, 
                             recursive = FALSE)
@@ -629,12 +628,7 @@ CreateCorrectPropArray <- function(ScenarioLoc){
       b <- b+1
     }
     ScenarioFolder <- paste0(ScenarioList[ArrayBookmark],"/")
-    if (str_contains(ScenarioFolder, "20") == TRUE){
-      numberIndsPerSpecies <- 20
-    }
-    if(str_contains(ScenarioFolder, "10") == TRUE){
-      numberIndsPerSpecies <- 10
-    }
+
     NumArpFiles <- length(ArpFilesInFSCOut)
     a <- 1
     labelsList <- list()
@@ -1332,17 +1326,18 @@ CreateHUnknownErrorArray <- function(ScenarioLoc){
 #input number of inds per species to decide how many hybrids to make (Should be changed later due to makestructure() using the file names rather than this input)
 numberIndsPerSpecies <- 20
 setwd("/Users/CHendrikse/Documents/HybridSimulation/Scenarios/4Deme20inds/StructOut7/")
-setwd("/Users/CHendrikse/Documents/REUHybridSimulation/Scenarios/")
-setwd("/Users/clhen/Documents/HybridSimulation/Scenarios/") #for my laptop
+setwd("/Users/CHendrikse/Documents/H")
+setwd("/Users/clhen/Documents/HybridSimulation/TempDir15ms/") #for my laptop
 ScenarioLoc <- getwd()
-ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/Scenarios/"
+setwd("/Users/clhen/Documents/HybridSimulation/Scenarios/")
+ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/TempDir15ms/"
 
 
 
 
 #Before running structure ----
   ScenarioList <- list.dirs(path = , full.names = FALSE, recursive = FALSE)
-  basepath <- paste0(ScenarioLoc, "/", ScenarioList[8])
+  basepath <- paste0(ScenarioLoc, "/", ScenarioList[6])
   arpfilesloc <- paste0(basepath, "/ArpFiles" )
   InFunction <- FALSE
   #finds the arp files to create labels
@@ -1363,7 +1358,7 @@ ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/Scenarios/"
     
     b <- b+1
   }
-  ScenarioFolder <- paste0(ScenarioList[8],"/")
+  ScenarioFolder <- paste0(ScenarioList[6],"/")
   NumArpFiles <- 10
   a <- 1
   labelsList <- list()
@@ -1381,8 +1376,9 @@ ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/Scenarios/"
 
 
 #After Structure: reads structure's results and makes the table and outputs the proportion of success----
+  ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/Scenarios/"
   correctarray <- CreateCorrectPropArray(ScenarioLoc)
-  ErrorArray <- CreateErrorArray(ScenarioLoc, "H2P")
+  ErrorArray <- CreateErrorArray(ScenarioLoc, "Merge")
   
   #Creating boxplot for data
   boxplot(list(ErrorArray[,,1],ErrorArray[,,2],ErrorArray[,,3],ErrorArray[,,4],ErrorArray[,,5],ErrorArray[,,6],ErrorArray[,,7],ErrorArray[,,8],ErrorArray[,,9],ErrorArray[,,10]), ylim = c(0,1), pch = 19)
