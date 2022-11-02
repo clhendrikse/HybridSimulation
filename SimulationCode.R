@@ -1327,7 +1327,7 @@ CreateHUnknownErrorArray <- function(ScenarioLoc){
 numberIndsPerSpecies <- 20
 setwd("/Users/CHendrikse/Documents/HybridSimulation/Scenarios/4Deme20inds/StructOut7/")
 setwd("/Users/CHendrikse/Documents/H")
-setwd("/Users/clhen/Documents/HybridSimulation/TempDir15ms/") #for my laptop
+setwd("/Users/clhen/Documents/HybridSimulation/TempDirectories/20ms") #for my laptop
 ScenarioLoc <- getwd()
 setwd("/Users/clhen/Documents/HybridSimulation/Scenarios/")
 ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/TempDir15ms/"
@@ -1337,7 +1337,8 @@ ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/TempDir15ms/"
 
 #Before running structure ----
   ScenarioList <- list.dirs(path = , full.names = FALSE, recursive = FALSE)
-  basepath <- paste0(ScenarioLoc, "/", ScenarioList[6])
+  ScenarioNum <- ScenarioList[10]
+  basepath <- paste0(ScenarioLoc,"/", ScenarioNum)
   arpfilesloc <- paste0(basepath, "/ArpFiles" )
   InFunction <- FALSE
   #finds the arp files to create labels
@@ -1358,7 +1359,7 @@ ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/TempDir15ms/"
     
     b <- b+1
   }
-  ScenarioFolder <- paste0(ScenarioList[6],"/")
+  ScenarioFolder <- paste0(ScenarioNum,"/")
   NumArpFiles <- 10
   a <- 1
   labelsList <- list()
@@ -1382,6 +1383,8 @@ ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/TempDir15ms/"
   
   #Creating boxplot for data
   boxplot(list(ErrorArray[,,1],ErrorArray[,,2],ErrorArray[,,3],ErrorArray[,,4],ErrorArray[,,5],ErrorArray[,,6],ErrorArray[,,7],ErrorArray[,,8],ErrorArray[,,9],ErrorArray[,,10]), ylim = c(0,1), pch = 19)
-  boxplot(list(correctarray[,,1],correctarray[,,2],correctarray[,,3],correctarray[,,4],correctarray[,,5],correctarray[,,6],correctarray[,,7],correctarray[,,8], correctarray[,,9],correctarray[,,10]), ylim = c(0,1), pch = 19)
+  boxplot(list(correctarray[,,1],correctarray[,,2],correctarray[,,3],correctarray[,,4],correctarray[,,5],correctarray[,,6],correctarray[,,7],correctarray[,,8], correctarray[,,9],correctarray[,,10],
+               correctarray[,,11],correctarray[,,12],correctarray[,,13], correctarray[,,14],correctarray[,,15],
+               correctarray[,,16],correctarray[,,17],correctarray[,,18], correctarray[,,19]), ylim = c(0,1), pch = 19)
   
   
