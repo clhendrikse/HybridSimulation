@@ -22,7 +22,7 @@ library(hierfstat)
 # This folder is linked to the home folder
 # sim.wd <- "~/Documents/hendrickseHybridization/SNP_Demo/"
 # sim.wd <- "/home/chendrikse/Shared/HybridSimulation/"
-gitHub.wd <- "/home/akoontz/Documents/hendrickseHybridization/HybridSimulation/"
+gitHub.wd <- "/Users/clhen/Documents/HybridSimulation/"
 setwd(gitHub.wd)
 
 # ---- FUNCTIONS ----

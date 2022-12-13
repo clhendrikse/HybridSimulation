@@ -1,0 +1,121 @@
+Simulation parameters for current simulations
+=============================================
+
+
+Deme sizes
+Deme 0	20000
+Deme 1	20000
+Deme 2	20000
+Deme 3	20000
+Deme 4	20000
+Deme 5	20000
+Deme 6	20000
+
+
+Sample sizes
+Deme 0	40
+Deme 1	40
+Deme 2	40
+Deme 3	40
+Deme 4	40
+Deme 5	40
+Deme 6	40
+
+Sample ages
+Deme 0	0
+Deme 1	0
+Deme 2	0
+Deme 3	0
+Deme 4	0
+Deme 5	0
+Deme 6	0
+
+Growth rates
+Deme 0	0
+Deme 1	0
+Deme 2	0
+Deme 3	0
+Deme 4	0
+Deme 5	0
+Deme 6	0
+
+
+Historical events
+Event 0
+
+#Time             : 100000
+#Source           : 1
+#Sink             : 0
+#Migrants         : 1
+#New size         : 1
+#New growth rate  : 0
+#New migr. matrix : 0
+
+Event 1
+
+#Time             : 100000
+#Source           : 2
+#Sink             : 0
+#Migrants         : 1
+#New size         : 1
+#New growth rate  : 0
+#New migr. matrix : 0
+
+Event 2
+
+#Time             : 100000
+#Source           : 3
+#Sink             : 0
+#Migrants         : 1
+#New size         : 1
+#New growth rate  : 0
+#New migr. matrix : 0
+
+Event 3
+
+#Time             : 100000
+#Source           : 4
+#Sink             : 0
+#Migrants         : 1
+#New size         : 1
+#New growth rate  : 0
+#New migr. matrix : 0
+
+Event 4
+
+#Time             : 100000
+#Source           : 5
+#Sink             : 0
+#Migrants         : 1
+#New size         : 1
+#New growth rate  : 0
+#New migr. matrix : 0
+
+Event 5
+
+#Time             : 100000
+#Source           : 6
+#Sink             : 0
+#Migrants         : 1
+#New size         : 1
+#New growth rate  : 0
+#New migr. matrix : 0
+
+
+
+Number of independent loci to simulate : 10
+With the same chromosomal structure
+
+Number of linkage blocks to simulate in structure 1: 1
+
+   10 partially linked MICROSAT loci:
+      recombination, mutation rates, geometric parameter, and range constraint : 0.0000000000   0.0005000000   0.00000   0
+
+
+
+Random generator initialized with : 597482
+
+
+
+done in 1.248 secs
+

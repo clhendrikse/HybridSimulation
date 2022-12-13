@@ -8,6 +8,7 @@
 
 # Set working directory to relevant repository
 gitHub.wd <- "/home/chendrikse/Shared/HybridSimulation/"
+gitHub.wd <- "/Users/clhen/Documents/HybridSimulation/"
 setwd(gitHub.wd)
 
 library(RColorBrewer)
@@ -15,9 +16,9 @@ library(pophelper)
 
 # Declare path variables, for demonstrating plotting functions below
 # Single STRUCTURE file
-testStructFile <- paste0(gitHub.wd,"Scenarios/4sp_10ms_20ns/StructOut1/parentandhybrid4Deme_1_f")
+testStructFile <- paste0(gitHub.wd,"Scenarios/8sp_10ms_10ns/StructOut3/")
 # Folder of STRUCTURE files
-testStructFolder <- paste0(gitHub.wd,"Scenarios/4sp_10ms_20ns/StructOut1/")
+testStructFolder <- paste0(gitHub.wd,"Scenarios/8sp_10ms_10ns/StructOut3/")
 # Colors to use for plotting (RGB components in hexadecimal)
 test.colors <- c('#A8FFFD','#B862D3', '#A39D9D','#FFFF00','#69C261', '#FF59AC', '#26CDCD',  '#C1C6FF')
 
@@ -48,7 +49,7 @@ plotSTRUCTURE_single <- function(structFile, colors, title){
 }
 
 # Plot single file
-plotSTRUCTURE_single(structFile = testStructFile, colors = test.colors, title = "4sp_10ms_20ns")
+plotSTRUCTURE_single(structFile = testStructFile, colors = test.colors, title = "8sp_15ms_20ns")
 
 # Function for reading in each STRUCTURE file in a folder, and plotting it 
 plotSTRUCTURE_multiple <- function(folder, plotColors, scenarioNames){
@@ -67,4 +68,4 @@ plotSTRUCTURE_multiple <- function(folder, plotColors, scenarioNames){
 }
 
 # Demonstration
-plotSTRUCTURE_multiple(folder = testStructFolder, plotColors = test.colors, scenarioName = "4sp_10ms_20ns")
+plotSTRUCTURE_multiple(folder = testStructFolder, plotColors = test.colors, scenarioName = "8sp_10ms_10ns")
