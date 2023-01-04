@@ -20,26 +20,54 @@ library(pophelper)
 library(sjmisc)
 library(dplyr)
 
-#functions ---------------------------------------------------------------------
-# Function uses the location of the arp files to make hybrids, pools them all together and makes a STRUCTURE input file using genind2structure 
-makeStructure <- function(filename,a, numinds, ScenarioFolder, InFunction){
-  #Finds the arp files location so the files can be looped to create the STRUCTURE input files for each arp file
-  ArpFileLocation <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename, ".arp")
+# Functions ---------------------------------------------------------------------
+
+# This function takes an input filepath (either to .arp, for MSAT data, or .Rdata files, for SNP data),
+# and runs through a series of steps:
+# 1. generate genind objects in the R environment,
+# 2. hybridize 2 species within that genind object (using adegenet::hybridize),
+# 3. add those hybrid individuals with the parents (using adegenet::repool),
+# 4. convert the resulting genind object to a STRUCTURE input file (using genind2structure)
+makeStructure_New <- function(filename, a, numinds, ScenarioFolder, InFunction){
+  # Parsing the ScenarioFolder variable, to determine the marker type that's being processed
+  # The alternative to this is adding a new variable to pass to makeStructure, that just specifies the marker type!
   
-  #Uses the name of the scenario folder to find the number of individuals per species (will need to be changed later in event name of scenarios need to be changed)
+  marker <- parseThisString(ScenarioFolder)
+  
+  #Uses the name of the scenario folder to find the number of individuals per species 
+  # (will need to be changed later in event name of scenarios need to be changed)
   splitScenario <- strsplit(ScenarioFolder, split = "_")
   numindstotal <- splitScenario[[1]][3]
   numinds <- gsub("ns/", "", numindstotal)
   as.numeric(numinds)
   
-  #takes the file name and adds .arp so it can be found in the file
-  arp2gen(ArpFileLocation)
-  filename <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename)
-
-  
-  #turning file into a genind object
-  addgen<- paste(filename, ".gen", sep="")
-  genindobj <- read.genepop(addgen, ncode = 3)
+  if(marker=="MSAT"){
+    # ~~~ WORKING WITH MSAT DATA ~~~
+    # Finds the arp files location so the files can be looped to create the STRUCTURE input files for each arp file
+    ArpFileLocation <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename, ".arp")
+    
+    #takes the file name and adds .arp so it can be found in the file
+    arp2gen(ArpFileLocation)
+    filename <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename)
+    
+    #turning file into a genind object
+    addgen<- paste(filename, ".gen", sep="")
+    genindobj <- read.genepop(addgen, ncode = 3)
+    
+  } else{
+    # ~~~ WORKING WITH DNA DATA ~~~
+    # Paste together the filename argument with the relevant folder path to navigate to the _genind.Rdata files
+    # For instance, the SNPgenind variable below will ultimately have a value of something like :
+    # "~/Shared/HybridSimulation/Scenarios/DNA_4sp_10ns/DNA_4sp_10ns_1_4_genind.Rdata
+    
+    # I am not sure what the filename variable looks like, so Chloe, you may have to update this a bit to get it 
+    # to work with your pipeline
+    SNPgenind <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename)
+    
+    # Now, read in the genind objects based on the SNPgenind variable created above
+    # Can also use the read() or the load() functions
+    genindobj <- readRDS(SNPgenind)
+  }
   
   #taking the genpop object and separating it into genind objects
   individuals <- seppop(genindobj,res.type="genind")
@@ -76,6 +104,62 @@ makeStructure <- function(filename,a, numinds, ScenarioFolder, InFunction){
   #return the labels for individuals in the order they are in the file
   return(actual_values)
 }
+
+# This function uses the location of the arp files to make hybrids, pools them all together and makes a STRUCTURE input file using genind2structure 
+# makeStructure_Original <- function(filename,a, numinds, ScenarioFolder, InFunction){
+#   #Finds the arp files location so the files can be looped to create the STRUCTURE input files for each arp file
+#   ArpFileLocation <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename, ".arp")
+#   
+#   #Uses the name of the scenario folder to find the number of individuals per species (will need to be changed later in event name of scenarios need to be changed)
+#   splitScenario <- strsplit(ScenarioFolder, split = "_")
+#   numindstotal <- splitScenario[[1]][3]
+#   numinds <- gsub("ns/", "", numindstotal)
+#   as.numeric(numinds)
+#   
+#   #takes the file name and adds .arp so it can be found in the file
+#   arp2gen(ArpFileLocation)
+#   filename <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename)
+#   
+#   
+#   #turning file into a genind object
+#   addgen<- paste(filename, ".gen", sep="")
+#   genindobj <- read.genepop(addgen, ncode = 3)
+#   
+#   #taking the genpop object and separating it into genind objects
+#   individuals <- seppop(genindobj,res.type="genind")
+#   
+#   #making hybrids from pop1 and pop2
+#   hybrids <- hybridize(individuals[["pop1"]], individuals[["pop2"]], pop = "hybrid", n=numinds)
+#   
+#   #storing all species info into one genind object 4_1 referring to 4 demes n=1
+#   #note: hybridize does not store parents
+#   #repooling the first two species and the hybrids
+#   final_genind <- repool(individuals[["pop1"]], individuals[["pop2"]], hybrids)
+#   final_genind@pop
+#   #adding in the other species individuals after the hybrids (sp1,sp2,hybrids,sp3,sp4...)
+#   b <- 3
+#   while(b <= length(names(individuals))){
+#     popname <- paste("pop", b, sep = "")
+#     final_genind <- repool(final_genind, individuals[[popname]])
+#     
+#     b <- b+1
+#   }
+#   
+#   #making function to store to vector
+#   final_genind_df <- genind2df(final_genind)
+#   actual_values <- as.vector(final_genind_df$pop)
+#   
+#   #writing values into structure file
+#   #change so parentandhybrid01, parentandhybrid02... parentandhybrid10
+#   filenameforstruct <- paste("parentandhybrid", a, sep="")
+#   filenameforstruct <- paste0("parentandhybrid", a, ".str")
+#   if(InFunction == FALSE){
+#     genind2structure(final_genind, file= filenameforstruct, pops=FALSE)
+#   }
+#   
+#   #return the labels for individuals in the order they are in the file
+#   return(actual_values)
+# }
 
 #genind to structure file code (Clark 2017)
 genind2structure <- function(obj, file="", pops=FALSE){
