@@ -24,14 +24,27 @@ library(dplyr)
 # Function uses the location of the arp files to make hybrids, pools them all together and makes a STRUCTURE input file using genind2structure 
 makeStructure <- function(filename,a, numinds, ScenarioFolder, InFunction){
   #Finds the arp files location so the files can be looped to create the STRUCTURE input files for each arp file
-  ArpFileLocation <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename, ".arp")
   
+  
+  #finding the type of data either microsats or SNPs
+  if(str_contains(SenarioFolder, "ms") == TRUE){
+    marker <- "ms"
+  }else{
+    marker <- "SNP"
+  }
   #Uses the name of the scenario folder to find the number of individuals per species (will need to be changed later in event name of scenarios need to be changed)
+  
   splitScenario <- strsplit(ScenarioFolder, split = "_")
   numindstotal <- splitScenario[[1]][3]
   numinds <- gsub("ns/", "", numindstotal)
   as.numeric(numinds)
   
+  
+  if(marker == "ms"){
+    #working with MSAT data
+    #finds the arp files location so the files can be looped to create the STRUCTURE input files for each arp file
+  
+  ArpFileLocation <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename, ".arp")
   #takes the file name and adds .arp so it can be found in the file
   arp2gen(ArpFileLocation)
   filename <- paste0(getwd(),"/", ScenarioFolder,"ArpFiles/", filename)
@@ -41,6 +54,17 @@ makeStructure <- function(filename,a, numinds, ScenarioFolder, InFunction){
   addgen<- paste(filename, ".gen", sep="")
   genindobj <- read.genepop(addgen, ncode = 3)
   
+  } else{
+  #working with DNA/SNP data
+  #goal is to paste filename with the relevant folder path to get to the _geninds.Rdata files
+    #example /4sp_DNA_10ns/4sp_DNA_10ns_1_2_genind.Rdata
+    
+    SNPgenind <- paste0(getwd(),"/", ScenarioFolder, "ArpFiles/", filename)
+    
+    #read in the genind objects based on SNPgenind variable created
+    #can also use read() or load()
+    genindobj <- readRDS(SNPgenind)
+}
   #taking the genpop object and separating it into genind objects
   individuals <- seppop(genindobj,res.type="genind")
   
@@ -449,7 +473,10 @@ CreateErrorArray <- function(ScenarioLoc, errortype){
    
    ScenarioFolder <- paste0(ScenarioList[ArrayBookmark],"/")
     
-    #Finding number of inds change later
+    #Finding number of inds 
+   #CHANGE: add new object to determine if scenario is MS or SNP
+   
+   
     tempdata <- strsplit(ScenarioList[ArrayBookmark], split = "_")
     numindsstring<- tempdata[[1]][3]
     numinds <- gsub("ns", "", numindsstring)
