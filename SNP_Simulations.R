@@ -120,7 +120,7 @@ DNA_4sp_10ns.params <- fscRun(DNA_4sp_10ns.params, num.sims = num_reps, all.site
 # 8 Demes
 DNA_8sp_10ns.params <- fscRun(DNA_8sp_10ns.params, num.sims = num_reps, all.sites = TRUE, exec = fscVersion)
 
-# ---- CONVERT ARLEQUIN OUTPUTS TO STRATAG ----
+# ---- CONVERT ARLEQUIN OUTPUTS TO GENIND ----
 # 4 Demes
 # Make a list of genind objects
 setwd(paste0(sim.wd, scenario_DNA_4Deme))
@@ -128,7 +128,7 @@ DNA_4sp_10ns.genList <- convertAllArp(arp.path = paste0(sim.wd, scenario_DNA_4De
                                       params = DNA_4sp_10ns.params)
 # Save genind objects to .Rdata objects, to be read in later
 for(i in 1:length(DNA_4sp_10ns.genList)){
-  saveRDS(object = DNA_4sp_10ns.genList[i], file = paste0(scenario_DNA_4Deme,"_1_",i,"_genind.Rdata"))
+  saveRDS(object = DNA_4sp_10ns.genList[[i]], file = paste0(scenario_DNA_4Deme,"_1_",i,"_genind.Rdata"))
 }
 
 # 8 Demes
@@ -138,7 +138,7 @@ DNA_8sp_10ns.genList <- convertAllArp(arp.path = paste0(sim.wd, scenario_DNA_8De
                                       params = DNA_8sp_10ns.params)
 # Save genind objects to .Rdata objects, to be read in later
 for(i in 1:length(DNA_8sp_10ns.genList)){
-  saveRDS(object = DNA_8sp_10ns.genList[i], file = paste0(scenario_DNA_4Deme,"_1_",i,"_genind.Rdata"))
+  saveRDS(object = DNA_8sp_10ns.genList[[i]], file = paste0(scenario_DNA_4Deme,"_1_",i,"_genind.Rdata"))
 }
 
 # ---- MOVE FILES AND CLEANUP SIMULATION OUTPUTS ----
