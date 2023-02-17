@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 remotes::install_github('royfrancis/pophelper')
 
 #--------------------------------------------
