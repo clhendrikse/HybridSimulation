@@ -16,10 +16,11 @@ library(pophelper)
 
 # Declare path variables, for demonstrating plotting functions below
 # Single STRUCTURE file
-testStructFile <- paste0(gitHub.wd,"ErrorTesting/4sp_10ms_10ns/StructOut1/")
+testStructFile <- paste0(gitHub.wd,"Scenarios/8sp_DNA_10ns/Run5_Outputs/parentAndHybrid_8_5_f")
+plotSTRUCTURE_single(structFile = testStructFile, colors = test.colors, title = "8sp_DNA_10ns")
 # Folder of STRUCTURE files
 testStructFolder <- testStructFile
-testStructFolder <- paste0(gitHub.wd,"ErrorTesting/4sp_20ms_20ns/Run4_Outputs/")
+testStructFolder <- paste0(gitHub.wd,"Scenarios/")
 # Colors to use for plotting (RGB components in hexadecimal)
 test.colors <- c('#A8FFFD','#B862D3', '#A39D9D','#FFFF00','#69C261', '#FF59AC', '#26CDCD',  '#C1C6FF')
 
@@ -50,7 +51,7 @@ plotSTRUCTURE_single <- function(structFile, colors, title){
 }
 
 # Plot single file
-plotSTRUCTURE_single(structFile = testStructFile, colors = test.colors, title = "8sp_10ms_10ns")
+plotSTRUCTURE_single(structFile = testStructFile, colors = test.colors, title = "4sp_DNA_10ns")
 
 # Function for reading in each STRUCTURE file in a folder, and plotting it 
 plotSTRUCTURE_multiple <- function(folder, plotColors, scenarioNames){
