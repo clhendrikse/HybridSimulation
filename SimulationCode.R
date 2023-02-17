@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 remotes::install_github('royfrancis/pophelper')
 
 #--------------------------------------------
@@ -27,9 +25,13 @@ library(dplyr)
 makeStructure <- function(filename,a, numinds, ScenarioFolder, InFunction){
   #Finds the arp files location so the files can be looped to create the STRUCTURE input files for each arp file
 
+
+
+
+  
   
   #finding the type of data either microsats or SNPs
-  if(str_contains(ScenarioFolder, "ms") == TRUE){
+  if(str_contains(SenarioFolder, "ms") == TRUE){
     marker <- "ms"
   }else{
     marker <- "SNP"
@@ -60,8 +62,8 @@ makeStructure <- function(filename,a, numinds, ScenarioFolder, InFunction){
   #working with DNA/SNP data
   #goal is to paste filename with the relevant folder path to get to the _geninds.Rdata files
     #example /4sp_DNA_10ns/4sp_DNA_10ns_1_2_genind.Rdata
-    
     SNPgenind <- paste0(getwd(),"/", ScenarioFolder, "ArpFiles/", filename, ".Rdata")
+
     
     #read in the genind objects based on SNPgenind variable created
     #can also use read() or load()
@@ -69,11 +71,23 @@ makeStructure <- function(filename,a, numinds, ScenarioFolder, InFunction){
 }
   #taking the genpop object and separating it into genind objects
   individuals <- seppop(genindobj,res.type="genind")
+
   if(marker == "ms"){
   #making hybrids from pop1 and pop2
   hybrids <- hybridize(individuals[["pop1"]], individuals[["pop2"]], pop = "hybrid", n=numinds)
   final_genind <- repool(individuals[["pop1"]], individuals[["pop2"]], hybrids)
   
+
+  
+  #making hybrids from pop1 and pop2
+  hybrids <- hybridize(individuals[["pop1"]], individuals[["pop2"]], pop = "hybrid", n=numinds)
+  
+  #storing all species info into one genind object 4_1 referring to 4 demes n=1
+  #note: hybridize does not store parents
+  #repooling the first two species and the hybrids
+  final_genind <- repool(individuals[["pop1"]], individuals[["pop2"]], hybrids)
+  final_genind@pop
+
   #adding in the other species individuals after the hybrids (sp1,sp2,hybrids,sp3,sp4...)
   b <- 3
   while(b <= length(names(individuals))){
@@ -82,6 +96,7 @@ makeStructure <- function(filename,a, numinds, ScenarioFolder, InFunction){
     
     b <- b+1
   }
+
   }else{
     hybrids <- hybridize(individuals[[1]], individuals[[2]], pop = "hybrid", n=numinds)
     final_genind <- repool(individuals[[1]], individuals[[2]], hybrids)
@@ -699,20 +714,30 @@ CreateCorrectPropArray <- function(ScenarioLoc){
 numberIndsPerSpecies <- 20
 setwd("/Users/CHendrikse/Documents/HybridSimulation/Scenarios/4Deme20inds/StructOut7/")
 setwd("/Users/CHendrikse/Documents/H")
+<<<<<<< HEAD
 setwd("/RAID1/Shared/chendrikse/HybridSimulation/Scenarios/") #for my laptop
 ScenarioLoc <- getwd()
 setwd("/RAID1/Shared/chendrikse/HybridSimulation/Scenarios/")
 ScenarioLoc <- getwd()
 ScenarioFolder <- getwd()
 
+setwd("/Users/clhen/Documents/HybridSimulation/TempDirectories/20ms") #for my laptop
+ScenarioLoc <- getwd()
+setwd("/Users/clhen/Documents/HybridSimulation/Scenarios/")
+ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/TempDir15ms/"
+
+
 
 
 #Before running structure ----
   ScenarioList <- list.dirs(path = , full.names = FALSE, recursive = FALSE)
+
   ScenarioFolder <- paste0(basepath)
   ScenarioList
-  ScenarioNum <- ScenarioList[32]
-  basepath <- paste0(ScenarioLoc, "/", ScenarioNum)
+
+  ScenarioNum <- ScenarioList[10]
+  basepath <- paste0(ScenarioLoc,"/", ScenarioNum)
+
   arpfilesloc <- paste0(basepath, "/ArpFiles" )
   InFunction <- FALSE
   #finds the arp files to create labels
@@ -733,6 +758,7 @@ ScenarioFolder <- getwd()
     
     b <- b+1
   }
+
   d <- 1
   
   #search for genind objects for DNA marker
@@ -747,6 +773,10 @@ ScenarioFolder <- getwd()
   }
   ScenarioFolder <- paste0(ScenarioNum,"/")
   NumArpFiles <- 5
+
+  ScenarioFolder <- paste0(ScenarioNum,"/")
+  NumArpFiles <- 10
+
   a <- 1
   labelsList <- list()
   #while a is less than or equal to the number of arp files, create labels for each file
@@ -763,6 +793,7 @@ ScenarioFolder <- getwd()
 
 
 #After Structure: reads structure's results and makes the table and outputs the proportion of success----
+
   ScenarioLoc <- "/RAID1/Shared/chendrikse/HybridSimulation/Scenarios/"
   correctarray <- CreateCorrectPropArray(ScenarioLoc)
   ErrorArray <- CreateErrorArray(ScenarioLoc, "Merge")
@@ -773,7 +804,7 @@ ScenarioFolder <- getwd()
                correctarray[,,11],correctarray[,,12],correctarray[,,13], correctarray[,,14],correctarray[,,15],
                correctarray[,,16],correctarray[,,17],correctarray[,,18], correctarray[,,19]), ylim = c(0,1), pch = 19)
   
-=======
+
 remotes::install_github('royfrancis/pophelper')
 
 #--------------------------------------------
@@ -1520,6 +1551,8 @@ ScenarioLoc <- "/Users/clhen/Documents/HybridSimulation/TempDir15ms/"
                correctarray[,,16],correctarray[,,17],correctarray[,,18], correctarray[,,19]), ylim = c(0,1), pch = 19)
   
 >>>>>>> b779ba1d251c11bc212d106623c8173bcb801ce5
+=======
+>>>>>>> temp-branch
   
 =======
 remotes::install_github('royfrancis/pophelper')
